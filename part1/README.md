@@ -1,7 +1,6 @@
 # HBnB Evolution: Technical Design Document (Part 1)
 
 **Project:** HBnB (Holberton AirBnB Clone)  
-**Version:** 1.0  
 **Date:** February 7, 2026  
 **Status:** Architecture & Design Phase  
 
@@ -36,14 +35,14 @@ The system follows a **Layered Architecture** to ensure separation of concerns. 
     * **The Facade (`HBnBFacade`):** Acts as a gatekeeper. It orchestrates workflows (e.g., "Create a Place") by validating data and interacting with the Repository.
     * **Domain Models:** Python classes (User, Place, Review) that hold data and business rules.
 
-* **Persistence Layer (Repositories):** Abstracts the data storage. Whether the data is in memory, a file, or a SQL database, the Business Logic layer doesn't need to know. It simply calls methods like `save()` or `get_all()`.
+* **Persistence Layer (Repositories):** Abstracts the data storage. Whether the data is in memory, a file, or a SQL database, the Business Logic layer doesn't need to know. It simply calls methods.
 
 ---
 
 ## 3. Business Logic Layer
 
 ### 3.1 Domain Model Overview
-The domain model represents the core entities of the AirBnB clone. All entities inherit from a `BaseModel` to ensure consistent ID generation and timestamping.
+The domain model represents the core entities of the AirBnB clone.
 
 ### 3.2 Detailed Class Diagram
 ![Detailed Class Diagram](Class-Diagram.png)
