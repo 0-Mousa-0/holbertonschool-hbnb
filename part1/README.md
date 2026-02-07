@@ -50,7 +50,6 @@ The domain model represents the core entities of the AirBnB clone. All entities 
 *(Note: Ensure this link points to your actual Class Diagram file)*
 
 ### 3.3 Explanatory Notes
-* **BaseModel:** The parent class providing `id` (UUID4), `created_at`, and `updated_at` to all subclasses.
 * **User:** Represents a registered user. Holds credentials and personal info.
 * **Place:** Represents a rental property. It is linked to a `User` (owner) via `owner_id`.
 * **Review:** Represents feedback left by a `User` for a `Place`. It links to both entities.
