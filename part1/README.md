@@ -26,7 +26,7 @@ This document covers:
 The system follows a **Layered Architecture** to ensure separation of concerns. This modularity allows for easier maintenance, testing, and scalability. The **Facade Pattern** is central to this design, providing a simplified interface for the API to interact with complex business logic.
 
 ### 2.2 Package Diagram
-![High-Level Package Diagram](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/High-Level_Package_Diagram.jpeg?raw=true)
+![High-Level Package Diagram](Package_Diagram.png)
 *(Note: Ensure this link points to your actual Package Diagram file)*
 
 ### 2.3 Explanatory Notes
@@ -46,7 +46,7 @@ The system follows a **Layered Architecture** to ensure separation of concerns. 
 The domain model represents the core entities of the AirBnB clone. All entities inherit from a `BaseModel` to ensure consistent ID generation and timestamping.
 
 ### 3.2 Detailed Class Diagram
-![Detailed Class Diagram](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/Detailed_Class_Diagram.jpeg?raw=true)
+![Detailed Class Diagram](Class-Diagram.png)
 *(Note: Ensure this link points to your actual Class Diagram file)*
 
 ### 3.3 Explanatory Notes
@@ -66,7 +66,7 @@ This section details the dynamic behavior of the system.
 ### 4.1 User Registration (`POST /auth/register`)
 **Goal:** Register a new user in the system.
 
-![User Registration Sequence](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/Sequence_User_Registration.jpeg?raw=true)
+![User Registration Sequence](User_Registration_Sequence.png)
 
 **Flow Description:**
 1.  **API:** Receives user data (email, password, etc.).
@@ -80,7 +80,7 @@ This section details the dynamic behavior of the system.
 ### 4.2 Place Creation (`POST /places`)
 **Goal:** Allow a registered user to list a new property.
 
-![Place Creation Sequence](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/Sequence_Place_Creation.jpeg?raw=true)
+![Place Creation Sequence](Place_Creation_Sequence.png)
 
 **Flow Description:**
 1.  **API:** Receives place details and the `user_id` (from the authenticated token/session).
@@ -94,7 +94,7 @@ This section details the dynamic behavior of the system.
 ### 4.3 List All Places (`GET /places`)
 **Goal:** Retrieve a list of all available properties.
 
-![List Places Sequence](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/Sequence_List_Places.jpeg?raw=true)
+![List Places Sequence](List_Places.png)
 
 **Flow Description:**
 1.  **API:** Receives a request to fetch places.
@@ -108,7 +108,7 @@ This section details the dynamic behavior of the system.
 ### 4.4 Submit Review (`POST /reviews`)
 **Goal:** Allow a user to post a review for a specific place.
 
-![Submit Review Sequence](https://github.com/0-Mousa-0/holbertonschool-hbnb/blob/main/part1/Sequence_Submit_Review.jpeg?raw=true)
+![Submit Review Sequence](Review_Submission.png)
 
 **Flow Description:**
 1.  **API:** Receives `place_id`, `user_id`, `rating`, and `comment`.
