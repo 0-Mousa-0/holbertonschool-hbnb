@@ -81,6 +81,6 @@ holbertonschool-hbnb/
 └── part4/                  # Frontend Web Client (Coming Soon)
 ```
 ## ✍️ Authors
-Abdullah Manahi 
-Mohammed Alabdali 
-Mousa Alqarni
+* **Abdullah Manahi** 
+* **Mohammed Alabdali** 
+* **Mousa Alqarni** 
