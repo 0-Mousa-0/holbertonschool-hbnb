@@ -79,7 +79,7 @@ holbertonschool-hbnb/
 ├── part2/                  # Source code for Business Logic & API (Coming Soon)
 ├── part3/                  # Database & Auth integration (Coming Soon)
 └── part4/                  # Frontend Web Client (Coming Soon)
-
+```
 ## ✍️ Authors
 Abdullah Manahi 
 Mohammed Alabdali 
