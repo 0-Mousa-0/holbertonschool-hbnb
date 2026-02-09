@@ -72,10 +72,10 @@ In this phase, we will translate the design from Part 1 into actual Python code.
 ```text
 holbertonschool-hbnb/
 ├── part1/                  # Technical Documentation & UMLs
-│   ├── High-Level_Package.jpeg
-│   ├── Detailed_Class_Diagram.jpeg
-│   ├── Sequence_*.jpeg
-│   └── technical_documentation.md
+│   ├── High-Level_Package.png
+│   ├── Detailed_Class_Diagram.png
+│   ├── Sequence_*.png
+│   └── README.md
 ├── part2/                  # Source code for Business Logic & API (Coming Soon)
 ├── part3/                  # Database & Auth integration (Coming Soon)
 └── part4/                  # Frontend Web Client (Coming Soon)
