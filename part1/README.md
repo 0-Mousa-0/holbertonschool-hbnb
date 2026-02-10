@@ -92,7 +92,7 @@ This section details the dynamic behavior of the system.
 ### 4.3 List All Places (`GET /places`)
 **Goal:** Retrieve a list of all available properties.
 
-![List Places Sequence](List_Places.png)
+![List Places Sequence](List_Places.md)
 
 **Flow Description:**
 1.  **API:** Receives a request to fetch places.
