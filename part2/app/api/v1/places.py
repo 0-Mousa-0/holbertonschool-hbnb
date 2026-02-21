@@ -1,25 +1,99 @@
-from flask_restx import Namespace, Resource
+from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
+api = Namespace('places', description='Place operations')
 
-api = Namespace('The definition was created to be error-free.')
+# Models
+amenity_model = api.model('PlaceAmenity', {
+    'id': fields.String(description='Amenity ID'),
+    'name': fields.String(description='Amenity name')
+})
+
+user_model = api.model('PlaceUser', {
+    'id': fields.String(description='Owner ID'),
+    'firstName': fields.String(description='Owner first name'),
+    'lastName': fields.String(description='Owner last name'),
+    'email': fields.String(description='Owner email')
+})
+
+place_model = api.model('Place', {
+    'title': fields.String(required=True, description='Title of the place'),
+    'description': fields.String(description='Description of the place'),
+    'price': fields.Float(required=True, description='Price per night'),
+    'latitude': fields.Float(required=True, description='Latitude'),
+    'longitude': fields.Float(required=True, description='Longitude'),
+    'owner_id': fields.String(required=True, description='Owner ID'),
+    'amenities': fields.List(fields.String, required=True, description='List of amenity IDs')
+})
+
+# -------------------
+# Routes
+# -------------------
+@api.route('/')
+class PlaceList(Resource):
+    @api.expect(place_model)
+    @api.response(201, 'Place created successfully')
+    @api.response(400, 'Invalid input')
+    def post(self):
+        data = api.payload
+        try:
+            place = facade.create_place(data)
+            return {
+                'id': place.id,
+                'title': place.title,
+                'description': place.description,
+                'price': place.price,
+                'latitude': place.latitude,
+                'longitude': place.longitude,
+                'owner_id': place.owner.id,
+                'amenities': [a.id for a in place.amenities]
+            }, 201
+        except ValueError as e:
+            return {'error': str(e)}, 400
+
+    @api.response(200, 'List of places')
+    def get(self):
+        places = facade.get_all_places()
+        return [{
+            'id': p.id,
+            'title': p.title,
+            'latitude': p.latitude,
+            'longitude': p.longitude
+        } for p in places], 200
 
 
-@api.route('/<place_id>/reviews')
-class PlaceReviewList(Resource):
-    @api.response(200, 'List of reviews for the place retrieved successfully')
+@api.route('/<place_id>')
+class PlaceResource(Resource):
+    @api.response(200, 'Place details')
     @api.response(404, 'Place not found')
     def get(self, place_id):
-        """Get all reviews for a specific place"""
-        # First check if the place exists
         place = facade.get_place(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
+        return {
+            'id': place.id,
+            'title': place.title,
+            'description': place.description,
+            'price': place.price,
+            'latitude': place.latitude,
+            'longitude': place.longitude,
+            'owner': {
+                'id': place.owner.id,
+                'firstName': place.owner.firstName,
+                'lastName': place.owner.lastName,
+                'email': place.owner.email
+            },
+            'amenities': [{'id': a.id, 'name': a.name} for a in place.amenities]
+        }, 200
 
-        reviews = facade.get_reviews_by_place(place_id)
-        return [{
-            'id': r.id,
-            'text': r.comment,
-            'rating': r.rating
-        } for r in reviews], 200
-    
+    @api.expect(place_model)
+    @api.response(200, 'Place updated')
+    @api.response(404, 'Place not found')
+    @api.response(400, 'Invalid input')
+    def put(self, place_id):
+        data = api.payload
+        try:
+            place = facade.update_place(place_id, data)
+            return {'message': 'Place updated successfully'}, 200
+        except ValueError as e:
+            return {'error': str(e)}, 400
