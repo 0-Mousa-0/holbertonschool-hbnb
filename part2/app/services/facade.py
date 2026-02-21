@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from app.persistence.repository import InMemoryRepository
 from app.models.review import Review
 from datetime import datetime
@@ -41,6 +42,7 @@ class HBnBFacade:
         self.user_repo.update(user.id, user)
         return user
 
+<<<<<<< HEAD
     def create_review(self, review_data):
         """Logic to create a review with validation for user, place, and rating"""
         user = self.get_user(review_data['user_id'])
@@ -92,3 +94,20 @@ class HBnBFacade:
     def delete_review(self, review_id):
         """Delete a review from storage"""
         return self.review_repo.delete(review_id)
+=======
+    def create_amenity(self, amenity_data):
+        # Placeholder for logic to create an amenity
+        pass
+
+    def get_amenity(self, amenity_id):
+        # Placeholder for logic to retrieve an amenity by ID
+        pass
+
+    def get_all_amenities(self):
+        # Placeholder for logic to retrieve all amenities
+        pass
+
+    def update_amenity(self, amenity_id, amenity_data):
+        # Placeholder for logic to update an amenity
+        pass
+>>>>>>> 0ffd783 (final fixes before sync)
