@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from .user import User
-from .place import Place
+from user import User
+from place import Place
 
 
 class Review:
