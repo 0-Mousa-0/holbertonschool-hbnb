@@ -30,9 +30,8 @@ class Place:
         self.reviews = []     # List to store related reviews
         self.amenities = []   # List to store related amenities
         
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
-    # User.id != owner
+        self.createDate = datetime.now()
+        self.updateDate = datetime.now()
     # ------------------------
     # Title property
     # ------------------------
@@ -48,7 +47,7 @@ class Place:
         if len(value) > 100:
             raise ValueError("Title cannot exceed 100 characters")
         self._title = value
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
     
     # ------------------------
     # Price property
@@ -64,7 +63,7 @@ class Place:
         if not isinstance(value, (int, float)) or value < 0:
             raise ValueError("Price must be a positive number")
         self._price = float(value)
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
     
     # ------------------------
     # Latitude property
@@ -80,7 +79,7 @@ class Place:
         if not isinstance(value, (int, float)) or not (-90 <= value <= 90):
             raise ValueError("Latitude must be between -90 and 90")
         self._latitude = float(value)
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
     
     # ------------------------
     # Longitude property
@@ -96,7 +95,7 @@ class Place:
         if not isinstance(value, (int, float)) or not (-180 <= value <= 180):
             raise ValueError("Longitude must be between -180 and 180")
         self._longitude = float(value)
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
     
     # ------------------------
     # Reviews and Amenities
@@ -104,9 +103,9 @@ class Place:
     def add_review(self, review):
         """Add a review to the place."""
         self.reviews.append(review)
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
     
     def add_amenity(self, amenity):
         """Add an amenity to the place."""
         self.amenities.append(amenity)
-        self.updated_at = datetime.utcnow()
+        self.updateDate = datetime.now()
