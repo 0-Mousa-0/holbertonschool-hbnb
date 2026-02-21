@@ -2,6 +2,7 @@
 import uuid
 from datetime import datetime
 
+
 class Amenity:
     def __init__(self, id = str(uuid.uuid4()) , name = "", **kwargs):
         self.id = id
