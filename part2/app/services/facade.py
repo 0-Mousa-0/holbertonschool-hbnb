@@ -127,11 +127,11 @@ class HBnBFacade:
             raise ValueError("Place not found")
 
         review = Review(
-            text=review_data['text'],
-            rating=review_data['rating'],
-            user=user,
-            place=place
-        )
+    comment=review_data['text'],
+    rating=review_data['rating'],
+    user=user,
+    place=place
+)
 
         place.add_review(review)
         self.review_repo.add(review)
@@ -148,9 +148,11 @@ class HBnBFacade:
         if not review:
             raise ValueError("Review not found")
 
-        for key in ['text', 'rating']:
-            if key in data:
-                setattr(review, key, data[key])
+        if 'text' in data:
+            review.comment = data['text']
+
+        if 'rating' in data:
+            review.rating = data['rating']
 
         self.review_repo.update(review_id, review)
         return review
