@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from user import User
+from app.models.user import User
 
 class Place:
     """Represents a Place in HBnB project."""

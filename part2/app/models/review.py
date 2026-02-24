@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from user import User
-from place import Place
+from app.models.user import User
+from app.models.place import Place
 
 
 class Review:
