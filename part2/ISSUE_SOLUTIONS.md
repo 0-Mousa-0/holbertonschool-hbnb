@@ -15,3 +15,23 @@ Each section is updated in the same commit as its corresponding code change.
   - explicit run command (`python run.py`);
   - test commands;
   - detailed project structure and purpose notes for key directories/files.
+
+## t1 - Core classes, inheritance, timestamps, and independent tests
+
+### Mistake
+- There was no shared base model using `id`, `created_at`, and `updated_at`.
+- Entity classes did not consistently follow inheritance and expected method behavior (`save()` and `update(data)`).
+- Existing tests were inconsistent with model constructor signatures and attribute names, so they did not validate the real implementation.
+
+### Solution implemented
+- Added `app/models/base_model.py` with:
+  - UUID `id` as string;
+  - `created_at` and `updated_at` timestamps;
+  - `save()` and `update(data)` methods.
+- Refactored `User`, `Place`, `Review`, and `Amenity` to inherit from `BaseModel`.
+- Standardized business attributes to expected names and validations (`first_name`, `last_name`, `email`, `text`, `rating`, etc.).
+- Added/reworked independent tests in `part2/test_models/` to verify:
+  - valid instance creation;
+  - validation failures for bad input;
+  - relationship handling between `Place`, `Review`, and `Amenity`;
+  - timestamp updates on `save()`/`update()`.

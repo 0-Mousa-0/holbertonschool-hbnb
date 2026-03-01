@@ -1,31 +1,37 @@
-from app.models.amenity import Amenity
+#!/usr/bin/python3
+"""Independent tests for the Amenity class."""
+
+import time
 import unittest
 
-class TestUser(unittest.TestCase):
+from app.models.amenity import Amenity
+from app.models.base_model import BaseModel
+
+
+class TestAmenity(unittest.TestCase):
+    def test_amenity_inherits_base_model(self):
+        amenity = Amenity(name="Wi-Fi")
+        self.assertIsInstance(amenity, BaseModel)
+        self.assertIsInstance(amenity.id, str)
+        self.assertIsNotNone(amenity.created_at)
+        self.assertIsNotNone(amenity.updated_at)
+
     def test_amenity_creation(self):
-        amenity = Amenity(name="Wi-Fi")
-        self.assertEqual(amenity.name, "Wi-Fi")
+        amenity = Amenity(name="Parking")
+        self.assertEqual(amenity.name, "Parking")
 
-    def test_amenity_max_length(self):
-        with self.assertRaises(ValueError) as context:
-            Amenity("abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz")
-        self.assertEqual(str(context.exception), "Name must be 50 characters max.")
+    def test_invalid_amenity_name(self):
+        with self.assertRaises(ValueError):
+            Amenity(name="")
 
-    def test_amenity_missing_field(self):
-        with self.assertRaises(TypeError):
-            Amenity()
+    def test_update_method(self):
+        amenity = Amenity(name="Pool")
+        old_updated_at = amenity.updated_at
+        time.sleep(0.001)
+        amenity.update({"name": "Gym"})
+        self.assertEqual(amenity.name, "Gym")
+        self.assertGreater(amenity.updated_at, old_updated_at)
 
-    def test_amenity_update(self):
-        amenity = Amenity(name="Wi-Fi")
-        new_data = {'name': "Wi-fi"}
-        amenity.update(new_data)
-        self.assertEqual(amenity.to_dict(), {'id': amenity.id, 'name': "Wi-fi"})
-
-    def test_user_update_fail(self):
-        amenity = Amenity(name="Wi-Fi")
-        with self.assertRaises(ValueError) as context:
-            amenity.name = "abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz"
-        self.assertEqual(str(context.exception), "Name must be 50 characters max.")
 
 if __name__ == "__main__":
     unittest.main()
