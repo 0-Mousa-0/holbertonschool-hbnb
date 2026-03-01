@@ -102,3 +102,18 @@ Each section is updated in the same commit as its corresponding code change.
   - return full updated review data on `PUT`;
   - return proper `200`/`404` behavior on delete.
 - Added `GET /api/v1/places/<place_id>/reviews` in `app/api/v1/places.py` with correct `200` and `404` handling.
+
+## t6 - Black-box tests and testing report
+
+### Mistake
+- No dedicated black-box test suite existed for API endpoints.
+- No detailed report documented successful vs edge/failure cases.
+
+### Solution implemented
+- Added automated API black-box tests in `part2/tests/test_api_blackbox.py`.
+- Added reproducible cURL checks in `part2/tests/curl_blackbox_tests.sh`.
+- Added a detailed testing report in `part2/tests/TESTING_REPORT.md` including:
+  - executed commands;
+  - coverage summary;
+  - successful cases;
+  - edge/failure cases and expected outcomes.

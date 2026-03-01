@@ -43,9 +43,17 @@ Then open:
 From the `part2/` directory:
 
 ```bash
-python -m unittest discover -s test_models -p "test_*.py"
-python -m unittest discover -s tests -p "test_*.py"
+python3 -m unittest discover -s test_models -p "test_*.py"
+python3 -m unittest discover -s tests -p "test_*.py"
 ```
+
+Additional manual HTTP checks:
+
+```bash
+./tests/curl_blackbox_tests.sh
+```
+
+Detailed results summary is documented in `tests/TESTING_REPORT.md`.
 
 ## Directory and File Structure
 
