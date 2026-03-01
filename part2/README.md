@@ -1,26 +1,112 @@
-# HBnB Evolution - Part 2: Business Logic & API Implementation
+# HBnB Evolution - Part 2
 
-This repository contains the second phase of the HBnB project. In this stage, the focus shifts from architectural design to implementing the **Business Logic Layer** and the **API Layer** using Python and Flask-RESTx.
+This directory contains **Part 2** of the HBnB project: business logic and REST API implementation.
+The project is organized in layers (API, facade/service, models, persistence) to keep responsibilities clean and maintainable.
 
-## 📌 Project Overview
-The objective of Part 2 is to create a functional RESTful API that handles core entities (Users, Places, Reviews, and Amenities) while following the **Facade Pattern** to maintain a strict separation of concerns between the user interface (API) and the underlying data logic.
+## Project Overview
 
+Part 2 implements:
 
+- Core entities: `User`, `Place`, `Review`, and `Amenity`
+- A facade service (`HBnBFacade`) that orchestrates business operations
+- In-memory repositories used by the facade
+- Flask-RESTx API endpoints under `/api/v1/...`
 
----
+## Requirements
 
-## 🛠️ Project Structure
+- Python 3.10+ (recommended)
+- `pip`
+
+## Install Dependencies
+
+From the `part2/` directory:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run the Application
+
+From the `part2/` directory:
+
+```bash
+python run.py
+```
+
+Then open:
+
+- API root: `http://127.0.0.1:5000/`
+- Swagger UI: `http://127.0.0.1:5000/api/v1/`
+
+## Run Tests
+
+From the `part2/` directory:
+
+```bash
+python3 -m unittest discover -s test_models -p "test_*.py"
+python3 -m unittest discover -s tests -p "test_*.py"
+```
+
+Additional manual HTTP checks:
+
+```bash
+./tests/curl_blackbox_tests.sh
+```
+
+Detailed results summary is documented in `tests/TESTING_REPORT.md`.
+
+## Directory and File Structure
 
 ```text
 part2/
 ├── app/
-│   ├── __init__.py          # Flask app initialization & API configuration
-│   ├── api/                 # API Layer
-│   │   └── v1/              # Version 1 of the API (Namespaces & Routes)
-│   ├── models/              # Business Logic Layer (Entity Classes)
-│   ├── persistence/         # Data Access Layer (Repository Pattern)
-│   └── services/            # Facade Pattern (Orchestrator)
-├── tests/                   # Unit Testing Suite
-├── run.py                   # Application Entry Point
-├── requirements.txt         # Project Dependencies
-└── README.md                # Documentation
+│   ├── __init__.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── v1/
+│   │       ├── __init__.py
+│   │       ├── users.py
+│   │       ├── amenities.py
+│   │       ├── places.py
+│   │       └── reviews.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base_model.py
+│   │   ├── user.py
+│   │   ├── amenity.py
+│   │   ├── place.py
+│   │   └── review.py
+│   ├── persistence/
+│   │   ├── __init__.py
+│   │   └── repository.py
+│   └── services/
+│       ├── __init__.py
+│       └── facade.py
+├── test_models/
+├── tests/
+├── run.py
+├── config.py
+├── requirements.txt
+├── README.md
+└── ISSUE_SOLUTIONS.md
+```
+
+### Purpose of Each Directory
+
+- `app/`: Main application package.
+- `app/api/`: Presentation layer with endpoint namespaces.
+- `app/models/`: Business layer entities and validations.
+- `app/persistence/`: Repository contract and in-memory implementation.
+- `app/services/`: Facade that coordinates business operations.
+- `test_models/`: Independent tests for model classes.
+- `tests/`: API black-box/integration tests and reports.
+
+### Purpose of Key Files
+
+- `run.py`: Application entry point.
+- `config.py`: Environment/application configuration.
+- `requirements.txt`: Python dependencies.
+- `app/__init__.py`: Flask app factory and namespace registration.
+- `app/services/facade.py`: Business-operation gateway used by API routes.
+- `app/persistence/repository.py`: Generic repository interface and in-memory storage.
+- `ISSUE_SOLUTIONS.md`: Notes on mistakes found and solutions applied per task.

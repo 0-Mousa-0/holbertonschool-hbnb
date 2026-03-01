@@ -13,6 +13,9 @@ class HBnBFacade:
         self.review_repo = InMemoryRepository()
 
     def create_user(self, user_data):
+        # Enforce unique email at the facade level (repository-aware check).
+        if self.get_user_by_email(user_data.get('email')):
+            raise ValueError("Email already registered")
         user = User(**user_data)
         self.user_repo.add(user)
         return user
@@ -35,15 +38,13 @@ class HBnBFacade:
         if not user:
             return None
 
-        # Update user attributes
-        if 'firstName' in user_data:
-            user.firstName = user_data['firstName']
-        if 'lastName' in user_data:
-            user.lastName = user_data['lastName']
-        if 'email' in user_data:
-            user.email = user_data['email']
+        new_email = user_data.get('email')
+        if new_email and new_email != user.email:
+            existing_user = self.get_user_by_email(new_email)
+            if existing_user and existing_user.id != user.id:
+                raise ValueError("Email already registered")
 
-        self.user_repo.update(user.id, user_data)
+        user.update(user_data)
         return user
 
     #-----amenity
@@ -67,23 +68,24 @@ class HBnBFacade:
         if not amenity:
             return None
 
-        # Update logic
-        if 'name' in amenity_data:
-            amenity.name = amenity_data['name']
-
-        self.amenity_repo.update(amenity.id, amenity_data)
+        amenity.update(amenity_data)
         return amenity
 
     #-------place
     def create_place(self, place_data):
         """Creates a place after validating owner and amenities exist"""
-        # Validate Owner
-        owner = self.get_user(place_data.get('owner_id'))
+        owner_id = place_data.get('owner_id')
+        owner = self.get_user(owner_id)
         if not owner:
             raise ValueError("Owner not found")
 
-        # Validate Amenities (if provided)
-        amenity_ids = place_data.pop('amenities', [])
+        # Validate amenities IDs and map them to real Amenity objects.
+        amenity_ids = place_data.get('amenities', [])
+        if amenity_ids is None:
+            amenity_ids = []
+        if not isinstance(amenity_ids, list):
+            raise ValueError("amenities must be a list of amenity IDs")
+
         validated_amenities = []
         for amenity_id in amenity_ids:
             amenity = self.get_amenity(amenity_id)
@@ -91,9 +93,14 @@ class HBnBFacade:
                 raise ValueError(f"Amenity {amenity_id} not found")
             validated_amenities.append(amenity)
 
-        # Create Place instance (Validation for price/lat/long happens in model setters)
-        place = Place(**place_data)
-        place.owner = owner
+        place = Place(
+            title=place_data.get('title'),
+            description=place_data.get('description', ''),
+            price=place_data.get('price'),
+            latitude=place_data.get('latitude'),
+            longitude=place_data.get('longitude'),
+            owner=owner,
+        )
         place.amenities = validated_amenities
 
         self.place_repo.add(place)
@@ -113,12 +120,10 @@ class HBnBFacade:
         if not place:
             return None
 
-        # Update specific fields if they exist in the payload
-        for key, value in place_data.items():
-            if hasattr(place, key) and key not in ['id', 'created_at', 'updated_at', 'owner']:
-                setattr(place, key, value)
-
-        self.place_repo.update(place.id, place_data)
+        # owner and relationships are immutable in this update endpoint.
+        blocked = {'id', 'created_at', 'updated_at', 'owner', 'owner_id', 'amenities', 'reviews'}
+        payload = {k: v for k, v in place_data.items() if k not in blocked}
+        place.update(payload)
         return place
 
     #---------review
@@ -127,10 +132,18 @@ class HBnBFacade:
         user = self.get_user(review_data.get('user_id'))
         place = self.get_place(review_data.get('place_id'))
 
-        if not user or not place:
-            raise ValueError("Invalid user_id or place_id")
+        if not user:
+            raise ValueError("User not found")
+        if not place:
+            raise ValueError("Place not found")
 
-        review = Review(**review_data)
+        review = Review(
+            text=review_data.get('text'),
+            rating=review_data.get('rating'),
+            place=place,
+            user=user,
+        )
+        place.add_review(review)
         self.review_repo.add(review)
         return review
 
@@ -141,19 +154,22 @@ class HBnBFacade:
         return self.review_repo.get_all()
 
     def get_reviews_by_place(self, place_id):
-        return [r for r in self.review_repo.get_all() if r.place_id == place_id]
+        return [review for review in self.review_repo.get_all() if review.place_id == place_id]
 
     def update_review(self, review_id, review_data):
         review = self.get_review(review_id)
         if not review:
             return None
-        # Only update text and rating as per requirements
-        if 'text' in review_data:
-            review.text = review_data['text']
-        if 'rating' in review_data:
-            review.rating = review_data['rating']
-        self.review_repo.update(review.id, review_data)
+
+        payload = {k: v for k, v in review_data.items() if k in {'text', 'rating'}}
+        review.update(payload)
         return review
 
     def delete_review(self, review_id):
+        review = self.get_review(review_id)
+        if not review:
+            return False
+
+        # Keep place.relationship list consistent after deletion.
+        review.place.reviews = [item for item in review.place.reviews if item.id != review_id]
         return self.review_repo.delete(review_id)

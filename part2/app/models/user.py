@@ -1,59 +1,77 @@
 #!/usr/bin/python3
+"""User entity implementation."""
+
 import re
-from datetime import datetime
-import uuid
+
+from app.models.base_model import BaseModel
 
 
-class User:
-    # Class variable to track emails across ALL instances
-    existing_emails = set()
+class User(BaseModel):
+    """Represents a platform user."""
 
-    def __init__(self, firstName="", lastName="", admin=False, email="", **kwargs):
-        # Generate ID inside __init__ so it's unique per instance
-        self.id = kwargs.get("id", str(uuid.uuid4()))
-        self.firstName = self.validate_string(firstName, "First Name")
-        self.lastName = self.validate_string(lastName, "Last Name")
-        self.admin = admin
+    def __init__(self, first_name, last_name, email, is_admin=False, **kwargs):
+        super().__init__(**kwargs)
+        self._first_name = ""
+        self._last_name = ""
+        self._email = ""
+        self._is_admin = False
 
-        # Uniqueness check
-        if email in User.existing_emails:
-            raise ValueError("email already registered")
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
+        self.is_admin = is_admin
 
-        self.email = self.verify_email(email)
-        User.existing_emails.add(self.email)
-
-        self.createDate = kwargs.get("createDate", datetime.now())
-        self.updateDate = kwargs.get("updateDate", datetime.now())
-
-    def validate_string(self, value, field_name):
-        if not value or not isinstance(value, str):
+    @staticmethod
+    def _validate_name(value, field_name):
+        if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{field_name} must be a non-empty string")
-        if len(value) > 50:
-            raise ValueError(f"{field_name} must be 50 characters maximum")
-        return value
+        if len(value.strip()) > 50:
+            raise ValueError(f"{field_name} must be at most 50 characters")
+        return value.strip()
 
-    def verify_email(self, email):
-        if not isinstance(email, str) or not email:
+    @staticmethod
+    def _validate_email(value):
+        if not isinstance(value, str) or not value.strip():
             raise ValueError("email must be a non-empty string")
-        if not re.match(r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$", email):
+        email = value.strip()
+        if not re.match(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$", email):
             raise ValueError("email must be a valid email address")
         return email
 
-    def profileUpdate(self, data):
-        # Use == for comparison
-        if "firstName" in data:
-            self.firstName = self.validate_string(data["firstName"], "First Name")
-        if "lastName" in data:
-            self.lastName = self.validate_string(data["lastName"], "Last Name")
-        if "email" in data:
-            new_email = data["email"]
-            if new_email != self.email and new_email in User.existing_emails:
-                raise ValueError("email already registered")
-            # Update the global set
-            User.existing_emails.discard(self.email)
-            self.email = self.verify_email(new_email)
-            User.existing_emails.add(self.email)
-        if "admin" in data:
-            self.admin = data["admin"]
+    @property
+    def first_name(self):
+        return self._first_name
 
-        self.updateDate = datetime.now()
+    @first_name.setter
+    def first_name(self, value):
+        self._first_name = self._validate_name(value, "first_name")
+        self.save()
+
+    @property
+    def last_name(self):
+        return self._last_name
+
+    @last_name.setter
+    def last_name(self, value):
+        self._last_name = self._validate_name(value, "last_name")
+        self.save()
+
+    @property
+    def email(self):
+        return self._email
+
+    @email.setter
+    def email(self, value):
+        self._email = self._validate_email(value)
+        self.save()
+
+    @property
+    def is_admin(self):
+        return self._is_admin
+
+    @is_admin.setter
+    def is_admin(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("is_admin must be a boolean")
+        self._is_admin = value
+        self.save()

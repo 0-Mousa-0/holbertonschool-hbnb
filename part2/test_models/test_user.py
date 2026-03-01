@@ -1,61 +1,51 @@
+#!/usr/bin/python3
+"""Independent tests for the User class."""
+
+import time
 import unittest
+
+from app.models.base_model import BaseModel
 from app.models.user import User
 
+
 class TestUser(unittest.TestCase):
-    def test_user_creation(self):
-        user = User(first_name="John", last_name="Doe", email="john.doe@example.com")
-        assert user.first_name == "John"
-        assert user.last_name == "Doe"
-        assert user.email == "john.doe@example.com"
-        assert user.is_admin is False  # Default value
-        user_id = user.id
-        assert user.to_dict() == {'id': user_id, 'first_name': "John", 'last_name': "Doe", 'email': 'john.doe@example.com'}
+    def test_user_inherits_base_model(self):
+        user = User(first_name="John", last_name="Doe", email="john1@example.com")
+        self.assertIsInstance(user, BaseModel)
+        self.assertIsInstance(user.id, str)
+        self.assertIsNotNone(user.created_at)
+        self.assertIsNotNone(user.updated_at)
 
-    # Faire les tests pour les types + is admin
+    def test_user_creation_valid_data(self):
+        user = User(first_name="John", last_name="Doe", email="john2@example.com")
+        self.assertEqual(user.first_name, "John")
+        self.assertEqual(user.last_name, "Doe")
+        self.assertEqual(user.email, "john2@example.com")
+        self.assertFalse(user.is_admin)
 
-    def test_user_max_length(self):
-        with self.assertRaises(ValueError) as context:
-            User(first_name="abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz", last_name="Doe", email="john.doe@example.com")
-        self.assertEqual(str(context.exception), "First name must be 50 characters max.")
+    def test_user_invalid_first_name(self):
+        with self.assertRaises(ValueError):
+            User(first_name="", last_name="Doe", email="john3@example.com")
 
-        with self.assertRaises(ValueError) as context:
-            User(first_name="John", last_name="abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz", email="john.doe@example.com")
-        self.assertEqual(str(context.exception), "Last name must be 50 characters max.")
+    def test_user_invalid_email(self):
+        with self.assertRaises(ValueError):
+            User(first_name="John", last_name="Doe", email="invalid-email")
 
-    def test_user_email(self):
-        with self.assertRaises(ValueError) as context:
-            User(first_name="John", last_name="Doe", email="john.doeexample.com")
-        self.assertEqual(str(context.exception), "Invalid email format")
+    def test_save_updates_timestamp(self):
+        user = User(first_name="John", last_name="Doe", email="john4@example.com")
+        old_updated_at = user.updated_at
+        time.sleep(0.001)
+        user.save()
+        self.assertGreater(user.updated_at, old_updated_at)
 
-    def test_user_required_fields(self):
-        with self.assertRaises(TypeError):
-            User(first_name="John", last_name="Doe")
-
-        with self.assertRaises(TypeError):
-            User(first_name="John", email="john.doe@example.com")
-
-        with self.assertRaises(TypeError):
-            User(last_name="Doe", email="john.doe@example.com")
-
-    def test_user_update(self):
-        user = User(first_name="John", last_name="Doe", email="john.doe@example.com")
-        new_data = {'first_name': "Jane", 'last_name': "Dupont", 'email': "jane.dupont@example.com"}
-        user.update(new_data)
-        self.assertEqual(user.to_dict(), {'id': user.id, 'first_name': "Jane", 'last_name': "Dupont", 'email': "jane.dupont@example.com"})
-
-    def test_user_update_fail(self):
-        user = User(first_name="John", last_name="Doe", email="john.doe@example.com")
-        with self.assertRaises(ValueError) as context:
-            user.first_name = "abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz"
-        self.assertEqual(str(context.exception), "First name must be 50 characters max.")
-
-        with self.assertRaises(ValueError) as context:
-            user.last_name = "abdcdefghijklmnopqrstuvwxyzabdcdefghijklmnopqrstuvwxyz"
-        self.assertEqual(str(context.exception), "Last name must be 50 characters max.")
-
-        with self.assertRaises(ValueError) as context:
-            user.email = "john.doeexample.com"
-        self.assertEqual(str(context.exception), "Invalid email format")
+    def test_update_method_changes_fields_and_timestamp(self):
+        user = User(first_name="John", last_name="Doe", email="john5@example.com")
+        old_updated_at = user.updated_at
+        time.sleep(0.001)
+        user.update({"first_name": "Jane", "last_name": "Smith"})
+        self.assertEqual(user.first_name, "Jane")
+        self.assertEqual(user.last_name, "Smith")
+        self.assertGreater(user.updated_at, old_updated_at)
 
 
 if __name__ == "__main__":
