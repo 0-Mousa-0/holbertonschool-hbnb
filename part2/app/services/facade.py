@@ -13,6 +13,9 @@ class HBnBFacade:
         self.review_repo = InMemoryRepository()
 
     def create_user(self, user_data):
+        # Enforce unique email at the facade level (repository-aware check).
+        if self.get_user_by_email(user_data.get('email')):
+            raise ValueError("Email already registered")
         user = User(**user_data)
         self.user_repo.add(user)
         return user
@@ -35,15 +38,13 @@ class HBnBFacade:
         if not user:
             return None
 
-        # Update user attributes
-        if 'firstName' in user_data:
-            user.firstName = user_data['firstName']
-        if 'lastName' in user_data:
-            user.lastName = user_data['lastName']
-        if 'email' in user_data:
-            user.email = user_data['email']
+        new_email = user_data.get('email')
+        if new_email and new_email != user.email:
+            existing_user = self.get_user_by_email(new_email)
+            if existing_user and existing_user.id != user.id:
+                raise ValueError("Email already registered")
 
-        self.user_repo.update(user.id, user_data)
+        user.update(user_data)
         return user
 
     #-----amenity

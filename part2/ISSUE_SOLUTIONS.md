@@ -35,3 +35,18 @@ Each section is updated in the same commit as its corresponding code change.
   - validation failures for bad input;
   - relationship handling between `Place`, `Review`, and `Amenity`;
   - timestamp updates on `save()`/`update()`.
+
+## t2 - User endpoint validation and error handling
+
+### Mistake
+- Invalid user input (for example an invalid email format) raised uncaught model exceptions and returned server errors instead of `400 Bad Request`.
+- Update flow mixed attribute names and did not consistently validate/handle invalid payloads.
+
+### Solution implemented
+- Updated `app/api/v1/users.py` to:
+  - use consistent payload/response keys (`first_name`, `last_name`, `email`);
+  - catch `ValueError` from the business layer and return structured `400` responses;
+  - keep `404` behavior for unknown `user_id` in `PUT /api/v1/users/<user_id>`.
+- Updated user methods in `app/services/facade.py` to:
+  - enforce email uniqueness in create/update;
+  - route update changes through `user.update(...)` so model validations are applied consistently.
