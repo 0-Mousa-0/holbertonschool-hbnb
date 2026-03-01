@@ -79,3 +79,26 @@ Each section is updated in the same commit as its corresponding code change.
   - serialize owner fields using correct attribute names (`first_name`, `last_name`);
   - return complete place data (including `id`, provided fields, and timestamps) for create and update;
   - return clean `400` responses on validation failures and `404` when place ID does not exist.
+
+## t5 - Review API/facade integration and behavior fixes
+
+### Mistake
+- Facade created `Review` objects with payload keys that did not match the model constructor.
+- Review serialization expected attributes that did not exist on the model.
+- Route `GET /api/v1/places/<place_id>/reviews` was missing from the places namespace.
+- Delete operation always returned a not-found outcome because repository delete had no boolean return contract.
+- Update responses did not return updated review data, making verification difficult.
+
+### Solution implemented
+- Updated review business logic in `app/services/facade.py` to:
+  - validate user/place existence with specific errors;
+  - instantiate `Review` with correct arguments (`text`, `rating`, `place`, `user`);
+  - keep place-review relationships synchronized on create/delete;
+  - apply update through `review.update(...)` validation.
+- Updated `app/persistence/repository.py` delete method to return `True` when deletion happens and `False` otherwise.
+- Reworked `app/api/v1/reviews.py` to:
+  - use consistent field names (`text`, `rating`, `user_id`, `place_id`);
+  - return structured `400` errors for invalid input;
+  - return full updated review data on `PUT`;
+  - return proper `200`/`404` behavior on delete.
+- Added `GET /api/v1/places/<place_id>/reviews` in `app/api/v1/places.py` with correct `200` and `404` handling.

@@ -132,10 +132,18 @@ class HBnBFacade:
         user = self.get_user(review_data.get('user_id'))
         place = self.get_place(review_data.get('place_id'))
 
-        if not user or not place:
-            raise ValueError("Invalid user_id or place_id")
+        if not user:
+            raise ValueError("User not found")
+        if not place:
+            raise ValueError("Place not found")
 
-        review = Review(**review_data)
+        review = Review(
+            text=review_data.get('text'),
+            rating=review_data.get('rating'),
+            place=place,
+            user=user,
+        )
+        place.add_review(review)
         self.review_repo.add(review)
         return review
 
@@ -146,19 +154,22 @@ class HBnBFacade:
         return self.review_repo.get_all()
 
     def get_reviews_by_place(self, place_id):
-        return [r for r in self.review_repo.get_all() if r.place_id == place_id]
+        return [review for review in self.review_repo.get_all() if review.place_id == place_id]
 
     def update_review(self, review_id, review_data):
         review = self.get_review(review_id)
         if not review:
             return None
-        # Only update text and rating as per requirements
-        if 'text' in review_data:
-            review.text = review_data['text']
-        if 'rating' in review_data:
-            review.rating = review_data['rating']
-        self.review_repo.update(review.id, review_data)
+
+        payload = {k: v for k, v in review_data.items() if k in {'text', 'rating'}}
+        review.update(payload)
         return review
 
     def delete_review(self, review_id):
+        review = self.get_review(review_id)
+        if not review:
+            return False
+
+        # Keep place.relationship list consistent after deletion.
+        review.place.reviews = [item for item in review.place.reviews if item.id != review_id]
         return self.review_repo.delete(review_id)
