@@ -74,13 +74,18 @@ class HBnBFacade:
     #-------place
     def create_place(self, place_data):
         """Creates a place after validating owner and amenities exist"""
-        # Validate Owner
-        owner = self.get_user(place_data.get('owner_id'))
+        owner_id = place_data.get('owner_id')
+        owner = self.get_user(owner_id)
         if not owner:
             raise ValueError("Owner not found")
 
-        # Validate Amenities (if provided)
-        amenity_ids = place_data.pop('amenities', [])
+        # Validate amenities IDs and map them to real Amenity objects.
+        amenity_ids = place_data.get('amenities', [])
+        if amenity_ids is None:
+            amenity_ids = []
+        if not isinstance(amenity_ids, list):
+            raise ValueError("amenities must be a list of amenity IDs")
+
         validated_amenities = []
         for amenity_id in amenity_ids:
             amenity = self.get_amenity(amenity_id)
@@ -88,9 +93,14 @@ class HBnBFacade:
                 raise ValueError(f"Amenity {amenity_id} not found")
             validated_amenities.append(amenity)
 
-        # Create Place instance (Validation for price/lat/long happens in model setters)
-        place = Place(**place_data)
-        place.owner = owner
+        place = Place(
+            title=place_data.get('title'),
+            description=place_data.get('description', ''),
+            price=place_data.get('price'),
+            latitude=place_data.get('latitude'),
+            longitude=place_data.get('longitude'),
+            owner=owner,
+        )
         place.amenities = validated_amenities
 
         self.place_repo.add(place)
@@ -110,12 +120,10 @@ class HBnBFacade:
         if not place:
             return None
 
-        # Update specific fields if they exist in the payload
-        for key, value in place_data.items():
-            if hasattr(place, key) and key not in ['id', 'created_at', 'updated_at', 'owner']:
-                setattr(place, key, value)
-
-        self.place_repo.update(place.id, place_data)
+        # owner and relationships are immutable in this update endpoint.
+        blocked = {'id', 'created_at', 'updated_at', 'owner', 'owner_id', 'amenities', 'reviews'}
+        payload = {k: v for k, v in place_data.items() if k not in blocked}
+        place.update(payload)
         return place
 
     #---------review

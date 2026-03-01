@@ -61,3 +61,21 @@ Each section is updated in the same commit as its corresponding code change.
 - Updated `app/api/v1/amenities.py` to catch `ValueError` from create/update operations and return structured `400` responses.
 - Kept `404` response behavior for unknown amenity IDs.
 - Updated `app/services/facade.py` amenity update flow to use `amenity.update(...)`, ensuring model validations are always applied through one path.
+
+## t4 - Place endpoint contract alignment and update behavior
+
+### Mistake
+- API payload contract and facade/model signatures were misaligned (`owner` vs `owner_id`, amenity IDs vs amenity objects).
+- Place detail serialization referenced non-existent owner attributes and caused runtime errors.
+- Place update flow depended on inconsistent update logic and did not reliably return updated data.
+
+### Solution implemented
+- Updated place creation/update business logic in `app/services/facade.py` to:
+  - validate `owner_id` against existing users;
+  - validate all amenity IDs and map them to amenity objects;
+  - apply updates through model-level `place.update(...)` validation.
+- Reworked `app/api/v1/places.py` to:
+  - use correct payload fields (`owner_id`, amenities list of IDs);
+  - serialize owner fields using correct attribute names (`first_name`, `last_name`);
+  - return complete place data (including `id`, provided fields, and timestamps) for create and update;
+  - return clean `400` responses on validation failures and `404` when place ID does not exist.
