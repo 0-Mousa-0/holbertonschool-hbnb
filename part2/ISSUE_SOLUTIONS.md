@@ -50,3 +50,14 @@ Each section is updated in the same commit as its corresponding code change.
 - Updated user methods in `app/services/facade.py` to:
   - enforce email uniqueness in create/update;
   - route update changes through `user.update(...)` so model validations are applied consistently.
+
+## t3 - Amenity invalid input handling
+
+### Mistake
+- Invalid amenity names (empty/invalid values) produced uncaught exceptions and inconsistent API responses instead of reliable `400 Bad Request`.
+- Amenity update path did not consistently map validation errors to structured API responses.
+
+### Solution implemented
+- Updated `app/api/v1/amenities.py` to catch `ValueError` from create/update operations and return structured `400` responses.
+- Kept `404` response behavior for unknown amenity IDs.
+- Updated `app/services/facade.py` amenity update flow to use `amenity.update(...)`, ensuring model validations are always applied through one path.

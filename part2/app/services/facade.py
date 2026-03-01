@@ -68,11 +68,7 @@ class HBnBFacade:
         if not amenity:
             return None
 
-        # Update logic
-        if 'name' in amenity_data:
-            amenity.name = amenity_data['name']
-
-        self.amenity_repo.update(amenity.id, amenity_data)
+        amenity.update(amenity_data)
         return amenity
 
     #-------place
