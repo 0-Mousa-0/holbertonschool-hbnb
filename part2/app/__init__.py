@@ -32,11 +32,17 @@ def _patch_restx_registry_compat():
     ModelBase.validate = _validate_with_registry_fallback
 
 
-def create_app():
+def create_app(config_class="config.DevelopmentConfig"):
+    """
+    Update the app factory to receive the settings object.
+    """
     app = Flask(__name__)
+    # Loading settings from the passed object (e.g., DevelopmentConfig)
+    app.config.from_object(config_class)
     _patch_restx_registry_compat()
     # doc='/api/v1/' sets the Swagger UI location
-    api = Api(app, version='1.0', title='HBnB API', description='HBnB Application API', doc='/api/v1/')
+    api = Api(app, version='1.0', title='HBnB API',
+              description='HBnB Application API', doc='/api/v1/')
 
     # Register the users namespace
     # This makes endpoints available at /api/v1/users/...
