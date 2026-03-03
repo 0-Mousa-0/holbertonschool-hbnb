@@ -2,3 +2,5 @@ flask
 flask-restx
 jsonschema>=4.18.0
 flask-bcrypt
+sqlalchemy
+flask-sqlalchemy
