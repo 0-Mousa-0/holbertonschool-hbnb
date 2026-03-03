@@ -11,6 +11,13 @@ from flask_restx.model import ModelBase
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 # Initialize Bcrypt instance
+
+# implemented in task 5
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+#---------------
 bcrypt = Bcrypt()
 
 # Initialize JWTManager
@@ -63,4 +70,7 @@ def create_app(config_class="config.DevelopmentConfig"):
     api.add_namespace(places_ns, path='/api/v1/places')
     api.add_namespace(reviews_ns, path='/api/v1/reviews')
     api.add_namespace(auth_ns, path='/api/v1/auth')
+
+    db.init_app(app)
+    
     return app
