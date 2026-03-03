@@ -78,6 +78,28 @@ Imagine the project as a magical tree. Each `entity` is a leaf on this tree, and
   - **`1---*`** : One-to-Many. A single branch supports many leaves. Example: one `User` can write many `Posts`.
   - **`*---*`** : Many-to-Many. Two branches share many leaves. Example: `Students` and `Courses` can link to many of each other.
 
+## Task 3: Implementation of Authenticated User Access
+
+### Objective
+
+Secured specific API endpoints to ensure data integrity and enforce business rules regarding resource ownership.
+
+### Key Logic Implemented
+
+| Feature                  | Description                                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Ownership Validation** |                                                                                                                                      |
+|                          | Users can only update/delete Places they created                                                                                     |
+|                          | Users can only update/delete Reviews they authored                                                                                   |
+|                          | Users can only modify their own User Profiles                                                                                        |
+| **Review Restrictions**  |                                                                                                                                      |
+|                          | Implemented logic to prevent users from reviewing their own places                                                                   |
+|                          | Restricted users to a maximum of one review per place to ensure authentic feedback                                                   |
+| **Profile Integrity**    |                                                                                                                                      |
+|                          | Explicitly blocked updates to email and password fields within the profile update endpoint to prevent unauthorized account hijacking |
+| **Public Accessibility** |                                                                                                                                      |
+|                          | Ensured that GET requests for places and reviews remain open to the public without requiring a JWT token                             |
+
 This ER diagram gives you a **magical, visual view** of how data flows and relates in the project.
 
 ```mermaid
