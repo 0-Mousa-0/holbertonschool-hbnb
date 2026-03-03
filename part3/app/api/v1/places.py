@@ -3,7 +3,7 @@
 from flask_restx import Namespace, Resource, fields
 
 from app.services import facade
-
+from flask_jwt_extended import jwt_required, get_jwt_identity
 api = Namespace('places', description='Place operations')
 
 amenity_model = api.model(
@@ -85,7 +85,8 @@ def _serialize_place(place):
         },
         'amenities': [{'id': amenity.id, 'name': amenity.name} for amenity in place.amenities],
         'reviews': [
-            {'id': review.id, 'text': review.text, 'rating': review.rating, 'user_id': review.user_id}
+            {'id': review.id, 'text': review.text,
+                'rating': review.rating, 'user_id': review.user_id}
             for review in place.reviews
         ],
         'created_at': place.created_at.isoformat(),
@@ -98,10 +99,21 @@ class PlaceList(Resource):
     @api.expect(place_create_model, validate=True)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    # Adding a new response for documentation
+    @api.response(401, 'Authorization required')
+    @jwt_required()  # Path protection
     def post(self):
         """Register a new place"""
         try:
-            new_place = facade.create_place(api.payload)
+            # Retrieve user identity from the JWT (user.id)
+            current_user_id = get_jwt_identity()
+
+            # Get the request payload
+            data = api.payload
+
+            # Overwrite or set owner_id from the authenticated user for security
+            data['owner_id'] = current_user_id
+            new_place = facade.create_place(data)
             return _serialize_place(new_place), 201
         except ValueError as exc:
             return {'error': str(exc)}, 400
@@ -128,6 +140,8 @@ class PlaceResource(Resource):
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authorization required')
+    @jwt_required()  # Modification protection
     def put(self, place_id):
         """Update a place's information"""
         try:
@@ -154,4 +168,3 @@ class PlaceReviewList(Resource):
             {'id': review.id, 'text': review.text, 'rating': review.rating}
             for review in reviews
         ], 200
-
