@@ -3,6 +3,7 @@
 from flask_restx import Namespace, Resource, fields
 
 from app.services import facade
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 api = Namespace('users', description='User operations')
 
@@ -23,8 +24,7 @@ user_update_model = api.model(
     {
         'first_name': fields.String(required=False, description='First name of the user'),
         'last_name': fields.String(required=False, description='Last name of the user'),
-        'email': fields.String(required=False, description='Email of the user'),
-        'is_admin': fields.Boolean(required=False, description='Admin flag'),
+        # Note: email and password are removed from update model per requirements
     },
 )
 
@@ -76,9 +76,23 @@ class UserResource(Resource):
     @api.response(200, 'User updated successfully')
     @api.response(404, 'User not found')
     @api.response(400, 'Invalid input data')
+    @api.response(403, 'Unauthorized action')
+    @jwt_required()
     def put(self, user_id):
         """Update user information"""
         try:
+            current_user_id = get_jwt_identity()
+
+            # 1. Ownership Validation: Check if user is updating their own profile
+            if user_id != current_user_id:
+                return {'error': 'Unauthorized action'}, 403
+
+            data = api.payload
+
+            # 2. Block modification of email or password
+            if 'email' in data or 'password' in data:
+                return {'error': 'You cannot modify email or password'}, 400
+
             updated_user = facade.update_user(user_id, api.payload)
             if not updated_user:
                 return {'error': 'User not found'}, 404
