@@ -41,3 +41,74 @@ class User(BaseModel):
     def verify_password(self, password):
         return bcrypt.check_password_hash(self.password, password)
 ```
+
+```mermaid
+erDiagram
+    %% 1. جدول المستخدمين (User)
+    User {
+        string id PK
+        string first_name
+        string last_name
+        string email
+        string password
+        boolean is_admin
+    }
+
+    %% 2. جدول العقارات (Place)
+    Place {
+        string id PK
+        string title
+        string description
+        float price
+        float latitude
+        float longitude
+        string owner_id FK
+    }
+
+    %% 3. جدول التقييمات (Review)
+    Review {
+        string id PK
+        string text
+        int rating
+        string user_id FK
+        string place_id FK
+    }
+
+    %% 4. جدول الخدمات (Amenity)
+    Amenity {
+        string id PK
+        string name
+    }
+
+    %% 5. الجدول الوسيط لحل علاقة المتعدد-إلى-متعدد (Place_Amenity)
+    Place_Amenity {
+        string place_id FK
+        string amenity_id FK
+    }
+
+    %% 6. تحدي الفهم الإضافي: جدول الحجوزات (Reservation)
+    Reservation {
+        string id PK
+        string user_id FK
+        string place_id FK
+        date start_date
+        date end_date
+        string status
+    }
+
+    %% ==========================================
+    %% رسم العلاقات (Relationships)
+    %% ==========================================
+
+    User ||--o{ Place : "owns (يمتلك)"
+    User ||--o{ Review : "writes (يكتب)"
+    Place ||--o{ Review : "has (يحتوي على)"
+
+    %% ربط العقار والخدمات عبر الجدول الوسيط
+    Place ||--o{ Place_Amenity : "includes (يتضمن)"
+    Amenity ||--o{ Place_Amenity : "belongs_to (ينتمي إلى)"
+
+    %% ربط تحدي الحجوزات
+    User ||--o{ Reservation : "makes (يقوم بـ)"
+    Place ||--o{ Reservation : "is_booked_via (يُحجز عبر)"
+```
