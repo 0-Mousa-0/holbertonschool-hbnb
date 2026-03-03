@@ -42,6 +42,20 @@ class User(BaseModel):
         return bcrypt.check_password_hash(self.password, password)
 ```
 
+**Diagram Title:** The Magical Project ER 🌳
+
+**Description:**  
+Imagine the project as a magical tree. Each `entity` is a leaf on this tree, and the branches show how they are connected. The diagram shows **how entities relate to each other** using familiar symbols:
+
+**Shapes and Symbols in the Diagram:**  
+- **Rectangle (`Entity`)**: Represents a main object or data type, like `User` or `Product`.  
+- **Diamond (`Relationship`)**: Represents a connection between entities, like "writes" or "enrolls in".  
+- **Oval (`Attribute`)**: Shows details about an entity, like `name`, `email`, or `price`.  
+- **Lines with symbols**: Show the type of relationship:
+  - **`1---*`** : One-to-Many. A single branch supports many leaves. Example: one `User` can write many `Posts`.  
+  - **`*---*`** : Many-to-Many. Two branches share many leaves. Example: `Students` and `Courses` can link to many of each other.
+
+This ER diagram gives you a **magical, visual view** of how data flows and relates in the project.
 ```mermaid
 erDiagram
     %% 1. جدول المستخدمين (User)
