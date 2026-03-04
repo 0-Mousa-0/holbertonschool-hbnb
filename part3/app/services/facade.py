@@ -4,19 +4,20 @@ from app.models.place import Place
 from app.models.review import Review
 from app.persistence.repository import SQLAlchemyRepository
 from app.persistence.repository import InMemoryRepository
+from app.services.repositories.user_repository import UserRepository
 
 
 class HBnBFacade:
     def __init__(self):
-        self.user_repo = SQLAlchemyRepository(User)
+        self.user_repo = UserRepository()
         self.amenity_repo = InMemoryRepository()
         self.place_repo = InMemoryRepository()
         self.review_repo = InMemoryRepository()
 
     def create_user(self, user_data):
-        # Enforce unique email at the facade level (repository-aware check).
         if self.get_user_by_email(user_data.get('email')):
             raise ValueError("Email already registered")
+        
         user = User(**user_data)
         self.user_repo.add(user)
         return user
@@ -25,7 +26,7 @@ class HBnBFacade:
         return self.user_repo.get(user_id)
 
     def get_user_by_email(self, email):
-        return self.user_repo.get_by_attribute('email', email)
+        return self.user_repo.get_user_by_email(email)
 
     # --- New Methods to Add ---
 
@@ -45,9 +46,8 @@ class HBnBFacade:
             if existing_user and existing_user.id != user.id:
                 raise ValueError("Email already registered")
 
-        user.update(user_data)
-        return user
-
+        self.user_repo.update(user.id, user_data)
+        return self.get_user(user_id)
     #-----amenity
     def create_amenity(self, amenity_data):
         """Creates a new amenity and adds it to the repository"""
