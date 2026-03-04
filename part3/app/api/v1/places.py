@@ -141,13 +141,26 @@ class PlaceResource(Resource):
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
     @api.response(401, 'Authorization required')
+    @api.response(403, 'Unauthorized action')  # New response for documentation
     @jwt_required()  # Modification protection
     def put(self, place_id):
         """Update a place's information"""
         try:
-            updated_place = facade.update_place(place_id, api.payload)
-            if not updated_place:
+            # 1. Retrieve the identity of the current user
+            current_user_id = get_jwt_identity()
+
+            # 2. Fetch the place object to check ownership
+            place = facade.get_place(place_id)
+            if not place:
                 return {'error': 'Place not found'}, 404
+
+            # 3. Ownership Validation: Check if the current user is the owner
+            # Assuming place object has an owner_id attribute
+            if place.owner.id != current_user_id:
+                return {'error': 'Unauthorized action'}, 403
+
+            # 4. Proceed with update if ownership is confirmed
+            updated_place = facade.update_place(place_id, api.payload)
             return _serialize_place(updated_place), 200
         except ValueError as exc:
             return {'error': str(exc)}, 400
