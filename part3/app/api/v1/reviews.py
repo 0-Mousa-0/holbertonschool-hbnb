@@ -3,7 +3,7 @@
 from flask_restx import Namespace, Resource, fields
 
 from app.services import facade
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 api = Namespace('reviews', description='Review operations')
 
 review_create_model = api.model(
@@ -103,14 +103,16 @@ class ReviewResource(Resource):
         try:
             current_user_id = get_jwt_identity()
             review = facade.get_review(review_id)
-
+            jwt_payload = get_jwt()
+            is_admin = jwt_payload.get('is_admin', False)
+            
             if not review:
                 return {'error': 'Review not found'}, 404
 
-            # Ownership Validation: Only the creator can modify the review
-            if review.user_id != current_user_id:
+            # Ownership Validation: Only the creator and admin can modify the review
+            if review.user_id != current_user_id and not is_admin:
                 return {'error': 'Unauthorized action'}, 403
-
+            
             updated_review = facade.update_review(review_id, api.payload)
             return _serialize_review(updated_review), 200
         except ValueError as exc:
@@ -128,8 +130,11 @@ class ReviewResource(Resource):
         if not review:
             return {'error': 'Review not found'}, 404
 
+        jwt_payload = get_jwt()
+        is_admin = jwt_payload.get('is_admin', False)
+        
         # Ownership Validation: Only the creator can delete the review
-        if review.user_id != current_user_id:
+        if review.user_id != current_user_id and not is_admin:
             return {'error': 'Unauthorized action'}, 403
 
         facade.delete_review(review_id)
