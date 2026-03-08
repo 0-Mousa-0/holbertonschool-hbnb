@@ -1,33 +1,18 @@
-#!/usr/bin/python3
-"""Shared base model with UUID and timestamp behavior."""
-from app import db
-from datetime import datetime
+from app.extensions import db
 import uuid
-
+from datetime import datetime
 
 class BaseModel(db.Model):
-    """Common behavior shared by all business entities."""
-    __abstract__ = True  # This ensures SQLAlchemy does not create a table for BaseModel
+    __abstract__ = True
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    
     def save(self):
-        """Refresh the update timestamp after a state change."""
-        self.updated_at = datetime.now()
+        db.session.add(self)
+        db.session.commit()
 
-    def update(self, data):
-        """
-        Update existing attributes from a dictionary.
-
-        Immutable base attributes are intentionally ignored.
-        """
-        protected = {"id", "created_at", "updated_at"}
-        for key, value in data.items():
-            if key in protected:
-                continue
-            if hasattr(self, key):
-                setattr(self, key, value)
-        self.save()
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
