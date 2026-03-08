@@ -172,3 +172,70 @@ erDiagram
     User ||--o{ Reservation : "makes (يقوم بـ)"
     Place ||--o{ Reservation : "is_booked_via (يُحجز عبر)"
 ```
+---
+# Task 7: Map User Entity to SQLAlchemy Model
+
+## Objective
+This task transitions the HBnB application's User data from a volatile in-memory storage system to a persistent relational database. By integrating **Flask-SQLAlchemy** and **Flask-Bcrypt**, we mapped the `User` entity to a database table, implemented a dedicated `UserRepository`, and resolved Flask application context and circular import challenges.
+
+## Key architectural Changes
+
+
+
+### 1. The Extensions Module (`app/extensions.py`)
+To prevent **Circular Import** errors between the Flask application factory and the SQLAlchemy models, a neutral extensions module was created.
+* Global objects (`db`, `bcrypt`, `jwt`) are instantiated here.
+* The `app/__init__.py` and all models import from this file, breaking the dependency loop.
+
+### 2. Database Models
+* **`BaseModel`**: Transformed into an abstract SQLAlchemy model (`__abstract__ = True`). It provides shared columns across all future tables: `id` (UUID string), `created_at`, and `updated_at`.
+* **`User`**: Mapped to the `users` table. Includes constraints (e.g., `unique=True` for emails), SQLAlchemy `@validates` decorators for data integrity, and built-in methods for hashing and verifying passwords using `Bcrypt`.
+
+### 3. Repository Pattern (`app/persistence/user_repository.py`)
+Replaced the generic `InMemoryRepository` with a specialized `UserRepository` that inherits from `SQLAlchemyRepository`. 
+* Encapsulates domain-specific queries, such as `get_user_by_email()`.
+* Keeps the business logic cleanly separated from direct database queries.
+
+### 4. The Facade (`app/services/facade.py`)
+Updated the `HBnBFacade` to act as the bridge between the API layer and the new `UserRepository`. It intercepts user creation requests to hash passwords before passing the entity to the repository for persistence.
+
+---
+
+## Setup and Initialization
+
+### Prerequisites
+Ensure your virtual environment is activated and the required packages are installed:
+```bash
+pip install Flask-SQLAlchemy Flask-Bcrypt
+```
+## Initializing the Database
+To create the SQLite database file and generate the users table based on your models, initialize the database via the Flask interactive shell:
+```bash
+# 1. Open the Flask application shell
+flask shell
+
+# 2. Inside the Python prompt, create the tables:
+>>> from app.extensions import db
+>>> db.create_all()
+>>> exit()
+```
+Note: This will create an instance/ directory in your project root containing the .db file.
+## API Testing
+You can verify the integration is working by creating and retrieving a user via the API using cURL or Postman.
+
+1. **Create a New User**:
+```bash
+curl -X POST "[http://127.0.0.1:5000/api/v1/users/](http://127.0.0.1:5000/api/v1/users/)" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "first_name": "John",
+           "last_name": "Doe",
+           "email": "john.doe@example.com",
+           "password": "password123"
+         }'
+```
+2. **Retrieve a User by ID**:
+(Replace <user_id> with the UUID returned from the creation step)
+```bash
+curl -X GET "[http://127.0.0.1:5000/api/v1/users/](http://127.0.0.1:5000/api/v1/users/)<user_id>"
+```
