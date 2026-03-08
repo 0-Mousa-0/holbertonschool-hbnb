@@ -1,3 +1,5 @@
+
+# Import and register namespaces
 from flask import Flask
 from flask_restx import Api
 from flask_restx.model import ModelBase
@@ -12,7 +14,6 @@ db = SQLAlchemy()
 #---------------
 # Initialize Bcrypt instance
 bcrypt = Bcrypt()
-
 # Initialize JWTManager
 jwt = JWTManager()
 
@@ -45,6 +46,9 @@ def create_app(config_class="config.DevelopmentConfig"):
     """
     Update the app factory to receive the settings object.
     """
+
+
+    # 1 -------------------------
     app = Flask(__name__)
     # Loading settings from the passed object (e.g., DevelopmentConfig)
     app.config.from_object(config_class)
@@ -61,18 +65,20 @@ def create_app(config_class="config.DevelopmentConfig"):
         from app.models.user import User
 
     # Import and register namespaces (Moved here to prevent circular imports)
+    # 2 ----------------------------
     from app.api.v1.reviews import api as reviews_ns
     from app.api.v1.places import api as places_ns
     from app.api.v1.amenities import api as amenities_ns
     from app.api.v1.users import api as users_ns
     from app.api.v1.auth import api as auth_ns
 
+    # 3 ------------------------------------------
     # doc='/api/v1/' sets the Swagger UI location
     api = Api(app, version='1.0', title='HBnB API',
               description='HBnB Application API', doc='/api/v1/')
 
     # Register the users namespace
-    # This makes endpoints available at /api/v1/users/...
+    # 4 -- This makes endpoints available at /api/v1/users/...
     api.add_namespace(users_ns, path='/api/v1/users')
     api.add_namespace(amenities_ns, path='/api/v1/amenities')
     api.add_namespace(places_ns, path='/api/v1/places')
