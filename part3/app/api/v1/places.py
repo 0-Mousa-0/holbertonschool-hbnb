@@ -1,9 +1,8 @@
 """Place API endpoints."""
 
 from flask_restx import Namespace, Resource, fields
-
 from app.services import facade
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 api = Namespace('places', description='Place operations')
 
 amenity_model = api.model(
@@ -153,12 +152,15 @@ class PlaceResource(Resource):
             place = facade.get_place(place_id)
             if not place:
                 return {'error': 'Place not found'}, 404
+            
+            jwt_payload = get_jwt()
+            is_admin = jwt_payload.get('is_admin', False)
 
             # 3. Ownership Validation: Check if the current user is the owner
-            # Assuming place object has an owner_id attribute
-            if place.owner.id != current_user_id:
-                return {'error': 'Unauthorized action'}, 403
 
+            if not is_admin and place.owner_id != current_user_id:
+                return {'error': 'Unauthorized action'}, 403
+            
             # 4. Proceed with update if ownership is confirmed
             updated_place = facade.update_place(place_id, api.payload)
             return _serialize_place(updated_place), 200

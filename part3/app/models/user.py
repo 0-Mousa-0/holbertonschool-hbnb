@@ -25,6 +25,8 @@ class User(BaseModel):
 
     def __init__(self, password=None, is_admin=False, **kwargs):
         super().__init__(**kwargs)
+        
+        self.is_admin = is_admin
         # Initialize password field
         self.password = ""
         # If a password is provided during initialization, hash it immediately

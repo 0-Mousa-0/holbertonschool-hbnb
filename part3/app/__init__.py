@@ -6,14 +6,13 @@ from flask_restx.model import ModelBase
 # Import Bcrypt extension
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
-# Initialize Bcrypt instance
 
 # implemented in task 5
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 #---------------
+# Initialize Bcrypt instance
 bcrypt = Bcrypt()
 # Initialize JWTManager
 jwt = JWTManager()
@@ -53,18 +52,26 @@ def create_app(config_class="config.DevelopmentConfig"):
     app = Flask(__name__)
     # Loading settings from the passed object (e.g., DevelopmentConfig)
     app.config.from_object(config_class)
+    
     # Setup Bcrypt with app version
     bcrypt.init_app(app)
     jwt.init_app(app)
     db.init_app(app)
 
     _patch_restx_registry_compat()
+
+    # Load models inside app context to avoid unmapped errors
+    with app.app_context():
+        from app.models.user import User
+
+    # Import and register namespaces (Moved here to prevent circular imports)
     # 2 ----------------------------
     from app.api.v1.reviews import api as reviews_ns
     from app.api.v1.places import api as places_ns
     from app.api.v1.amenities import api as amenities_ns
     from app.api.v1.users import api as users_ns
     from app.api.v1.auth import api as auth_ns
+
     # 3 ------------------------------------------
     # doc='/api/v1/' sets the Swagger UI location
     api = Api(app, version='1.0', title='HBnB API',
