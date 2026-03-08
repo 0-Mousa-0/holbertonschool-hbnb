@@ -1,23 +1,16 @@
-from app.api.v1.reviews import api as reviews_ns
-from app.api.v1.places import api as places_ns
-from app.api.v1.amenities import api as amenities_ns
-from app.api.v1.users import api as users_ns
-# Import and register namespaces
-from app.api.v1.auth import api as auth_ns
 from flask import Flask
 from flask_restx import Api
 from flask_restx.model import ModelBase
 # Import Bcrypt extension
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
-# Initialize Bcrypt instance
 
 # implemented in task 5
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 #---------------
+# Initialize Bcrypt instance
 bcrypt = Bcrypt()
 
 # Initialize JWTManager
@@ -55,10 +48,25 @@ def create_app(config_class="config.DevelopmentConfig"):
     app = Flask(__name__)
     # Loading settings from the passed object (e.g., DevelopmentConfig)
     app.config.from_object(config_class)
+    
     # Setup Bcrypt with app version
     bcrypt.init_app(app)
     jwt.init_app(app)
+    db.init_app(app)
+
     _patch_restx_registry_compat()
+
+    # Load models inside app context to avoid unmapped errors
+    with app.app_context():
+        from app.models.user import User
+
+    # Import and register namespaces (Moved here to prevent circular imports)
+    from app.api.v1.reviews import api as reviews_ns
+    from app.api.v1.places import api as places_ns
+    from app.api.v1.amenities import api as amenities_ns
+    from app.api.v1.users import api as users_ns
+    from app.api.v1.auth import api as auth_ns
+
     # doc='/api/v1/' sets the Swagger UI location
     api = Api(app, version='1.0', title='HBnB API',
               description='HBnB Application API', doc='/api/v1/')
@@ -70,7 +78,5 @@ def create_app(config_class="config.DevelopmentConfig"):
     api.add_namespace(places_ns, path='/api/v1/places')
     api.add_namespace(reviews_ns, path='/api/v1/reviews')
     api.add_namespace(auth_ns, path='/api/v1/auth')
-
-    db.init_app(app)
     
     return app
