@@ -115,7 +115,6 @@ class UserResource(Resource):
                 email = data.get('email')
                 
                 if email:
-                    # التحقق من أن الإيميل الجديد غير مستخدم من قبل شخص آخر!
                     existing_user = facade.get_user_by_email(email)
 
                     if existing_user and existing_user.id != user_id:
