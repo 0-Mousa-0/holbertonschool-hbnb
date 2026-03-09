@@ -1,21 +1,9 @@
-
-# Import and register namespaces
+#!/usr/bin/python3
 from flask import Flask
 from flask_restx import Api
 from flask_restx.model import ModelBase
-# Import Bcrypt extension
-from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager
-
-# implemented in task 5
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-#---------------
-# Initialize Bcrypt instance
-bcrypt = Bcrypt()
-# Initialize JWTManager
-jwt = JWTManager()
+# Import from our new neutral ground
+from .extensions import db, bcrypt, jwt
 
 _ORIGINAL_RESTX_MODEL_VALIDATE = ModelBase.validate
 
@@ -33,7 +21,6 @@ def _patch_restx_registry_compat():
         except TypeError as exc:
             if "unexpected keyword argument 'registry'" not in str(exc):
                 raise
-            # Older jsonschema validators do not accept "registry"; retry without resolver.
             return _ORIGINAL_RESTX_MODEL_VALIDATE(
                 self, data, resolver=None, format_checker=format_checker
             )
@@ -46,43 +33,32 @@ def create_app(config_class="config.DevelopmentConfig"):
     """
     Update the app factory to receive the settings object.
     """
-
-
-    # 1 -------------------------
     app = Flask(__name__)
-    # Loading settings from the passed object (e.g., DevelopmentConfig)
     app.config.from_object(config_class)
-    
-    # Setup Bcrypt with app version
+
+    # Initialize extensions
+    db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    db.init_app(app)
 
     _patch_restx_registry_compat()
 
-    # Load models inside app context to avoid unmapped errors
-    with app.app_context():
-        from app.models.user import User
-
-    # Import and register namespaces (Moved here to prevent circular imports)
-    # 2 ----------------------------
-    from app.api.v1.reviews import api as reviews_ns
-    from app.api.v1.places import api as places_ns
-    from app.api.v1.amenities import api as amenities_ns
-    from app.api.v1.users import api as users_ns
-    from app.api.v1.auth import api as auth_ns
-
-    # 3 ------------------------------------------
-    # doc='/api/v1/' sets the Swagger UI location
+    # Setup API
     api = Api(app, version='1.0', title='HBnB API',
               description='HBnB Application API', doc='/api/v1/')
 
-    # Register the users namespace
-    # 4 -- This makes endpoints available at /api/v1/users/...
+    # Import Namespaces INSIDE the factory to prevent circularity
+    from app.api.v1.users import api as users_ns
+    from app.api.v1.amenities import api as amenities_ns
+    from app.api.v1.places import api as places_ns
+    from app.api.v1.reviews import api as reviews_ns
+    from app.api.v1.auth import api as auth_ns
+
+    # Register Namespaces
     api.add_namespace(users_ns, path='/api/v1/users')
     api.add_namespace(amenities_ns, path='/api/v1/amenities')
     api.add_namespace(places_ns, path='/api/v1/places')
     api.add_namespace(reviews_ns, path='/api/v1/reviews')
     api.add_namespace(auth_ns, path='/api/v1/auth')
-    
+
     return app
