@@ -3,10 +3,19 @@
 
 from app.models.base_model import BaseModel
 from app.models.user import User
-
+from app.extensions import db
+from app.models.base_model import BaseModel
 
 class Place(BaseModel):
-    """Represents a listing owned by a user."""
+    __tablename__ = 'places'
+
+    # Overriding ID to Integer as per Task 8 requirements
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500))
+    price = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
 
     def __init__(
         self,

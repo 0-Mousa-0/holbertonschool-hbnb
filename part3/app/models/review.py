@@ -4,9 +4,15 @@
 from app.models.base_model import BaseModel
 from app.models.place import Place
 from app.models.user import User
-
+from app.extensions import db
+from app.models.base_model import BaseModel
 
 class Review(BaseModel):
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    text = db.Column(db.String(1000), nullable=False)
+    rating = db.Column(db.Integer, nullable=False) # Should be 1-5
     """Represents a review written by a user for a place."""
 
     def __init__(self, text, rating, place, user, **kwargs):
