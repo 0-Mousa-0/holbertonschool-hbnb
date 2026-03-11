@@ -6,17 +6,23 @@ from app.models.place import Place
 from app.models.review import Review
 from app.persistence.repository import InMemoryRepository
 from app.services.repositories.user_repository import UserRepository
-
+from app.services.repositories.place_repository import PlaceRepository
+from app.services.repositories.review_repository import ReviewRepository
+from app.services.repositories.amenity_repository import AmenityRepository
 
 class HBnBFacade:
     def __init__(self):
+        self.user_repo = UserRepository()
+        self.place_repo = PlaceRepository()    # Changed from InMemory
+        self.review_repo = ReviewRepository()  # Changed from InMemory
+        self.amenity_repo = AmenityRepository() # Changed from InMemory
         # Database Repository (Persistent for Users)
         self.user_repo = UserRepository()
 
         # In-Memory Repositories (Remaining entities)
-        self.amenity_repo = InMemoryRepository()
-        self.place_repo = InMemoryRepository()
-        self.review_repo = InMemoryRepository()
+        #self.amenity_repo = InMemoryRepository()
+        #self.place_repo = InMemoryRepository()
+        #self.review_repo = InMemoryRepository()
 
     # --- User Methods ---
 
