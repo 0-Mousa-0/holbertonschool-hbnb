@@ -239,3 +239,54 @@ curl -X POST "[http://127.0.0.1:5000/api/v1/users/](http://127.0.0.1:5000/api/v1
 ```bash
 curl -X GET "[http://127.0.0.1:5000/api/v1/users/](http://127.0.0.1:5000/api/v1/users/)<user_id>"
 ```
+
+---
+# Task 8: Entity-Relational Mapping (ERM) for Core Models
+
+## 🎯 Executive Summary
+The objective of this task is to transition the `Place`, `Review`, and `Amenity` entities from temporary, in-memory data structures to a persistent, relational database using **SQLAlchemy**. This process mirrors the data-mapping implementation previously completed for the `User` entity, establishing the foundational database schema required for the application's core business logic.
+
+---
+
+## 🧠 Architectural Concepts Applied
+1. **Object-Relational Mapping (ORM):** Utilizing SQLAlchemy to translate Python classes into relational database tables, allowing for object-oriented database manipulation.
+2. **Data Persistence:** Ensuring that entities created via the API are permanently stored in the database (`development.db`) rather than being lost when the server restarts.
+3. **Repository Pattern:** Abstracting database queries into dedicated repository classes, keeping the business logic (Facade) decoupled from the direct database operations.
+
+
+
+---
+
+## ⚙️ Implementation Workflow
+
+### 1. Model Definition (The Schema)
+Each entity is defined as a standalone SQLAlchemy model with strict data types and constraints. 
+* **Primary Keys:** Every entity is assigned a unique `id` defined as an `Integer` primary key.
+* **Constraints:** Required fields utilize `nullable=False` to enforce data integrity at the database level.
+
+**Entity Specifications:**
+* **Place:** Attributes include `title` (String), `description` (String), `price` (Float), `latitude` (Float), and `longitude` (Float).
+* **Review:** Attributes include `text` (String) and `rating` (Integer, constrained conceptually to 1-5).
+* **Amenity:** Attributes include a `name` (String).
+
+> ⚠️ **Architectural Constraint (Crucial):** > At this stage, **NO** relationships (Foreign Keys) are established between these entities. Each table is completely isolated. The mapping of relationships (e.g., linking a `Review` to a specific `Place` or `User`) is explicitly reserved for a subsequent task.
+
+### 2. Repository Integration
+Following the pattern established by the `UserRepository`, dedicated repositories must be created for the new entities:
+* `PlaceRepository`
+* `ReviewRepository`
+* `AmenityRepository`
+
+These repositories handle all basic CRUD (Create, Read, Update, Delete) operations using SQLAlchemy's session management.
+
+### 3. Facade Reconfiguration
+The central Service Layer (the Facade) is updated to route data through the new SQLAlchemy repositories instead of the legacy in-memory lists, successfully bridging the API endpoints with the persistent database.
+
+---
+
+## 🧪 Verification and Testing Protocol
+To ensure the mapping complies with the business logic and successfully persists data, the following testing sequence is executed:
+
+1. **Database Initialization:** Run `flask shell` followed by `db.create_all()` to physically construct the tables in the database based on the SQLAlchemy models.
+2. **Endpoint Validation:** Utilize `cURL` or Postman to execute `POST`, `GET`, `PUT`, and `DELETE` requests for Places, Reviews, and Amenities. 
+3. **Persistence Check:** Verify that the JSON payloads sent via the API successfully translate into new rows within the SQLite database.
