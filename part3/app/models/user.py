@@ -3,9 +3,15 @@ from app.extensions import db, bcrypt
 from app.models.base_model import BaseModel
 from sqlalchemy.orm import validates
 
+
 class User(BaseModel):
-    """Represents a platform user in the database."""
     __tablename__ = 'users'
+    # ... existing columns ...
+
+    # One-to-Many: A user can own many places
+    places = db.relationship('Place', backref='owner', lazy=True)
+    # One-to-Many: A user can write many reviews
+    reviews = db.relationship('Review', backref='author', lazy=True)
 
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
