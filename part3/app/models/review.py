@@ -9,6 +9,11 @@ from app.models.base_model import BaseModel
 
 class Review(BaseModel):
     __tablename__ = 'reviews'
+    # ... existing columns ...
+
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    place_id = db.Column(db.Integer, db.ForeignKey('places.id'), nullable=False)
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     text = db.Column(db.String(1000), nullable=False)
