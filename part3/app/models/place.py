@@ -5,9 +5,25 @@ from app.models.base_model import BaseModel
 from app.models.user import User
 from app.extensions import db
 from app.models.base_model import BaseModel
+# Association table for Many-to-Many: Place <-> Amenity
+place_amenity = db.Table('place_amenity',
+    db.Column('place_id', db.Integer, db.ForeignKey('places.id'), primary_key=True),
+    db.Column('amenity_id', db.Integer, db.ForeignKey('amenities.id'), primary_key=True)
+)
+
 
 class Place(BaseModel):
     __tablename__ = 'places'
+    # ... existing columns ...
+
+    # Foreign Key: Link to the owner (User)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    # One-to-Many: A place has many reviews
+    reviews = db.relationship('Review', backref='place', lazy=True)
+
+    # Many-to-Many: A place has many amenities
+    amenities = db.relationship('Amenity', secondary=place_amenity, backref='places', lazy='subquery')
 
     # Overriding ID to Integer as per Task 8 requirements
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
