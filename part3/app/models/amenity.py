@@ -4,12 +4,22 @@
 from app.models.base_model import BaseModel
 from app.extensions import db
 from app.models.base_model import BaseModel
+from app.models.place import place_amenity
 
-class Amenity(BaseModel):
+
+class Amenity(db.Model):
     __tablename__ = 'amenities'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(50), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+
+
+    places = db.relationship(
+        'Place',
+        secondary=place_amenity,
+        back_populates='amenities'
+    )
+
     """Represents a place amenity such as Wi-Fi or Parking."""
 
     def __init__(self, name, **kwargs):
