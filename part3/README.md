@@ -290,3 +290,32 @@ To ensure the mapping complies with the business logic and successfully persists
 1. **Database Initialization:** Run `flask shell` followed by `db.create_all()` to physically construct the tables in the database based on the SQLAlchemy models.
 2. **Endpoint Validation:** Utilize `cURL` or Postman to execute `POST`, `GET`, `PUT`, and `DELETE` requests for Places, Reviews, and Amenities. 
 3. **Persistence Check:** Verify that the JSON payloads sent via the API successfully translate into new rows within the SQLite database.
+
+---
+## Task 9: Establishing Entity Relationships
+
+### 📋 Overview
+In this task, we transitioned the database from flat, independent tables to a relational schema. By implementing **Foreign Keys** and **SQLAlchemy Relationships**, we enabled the application to maintain referential integrity and traverse data logically (e.g., finding the owner of a place or all reviews for a specific property).
+
+### 🛠 Implemented Relationships
+
+#### 1. One-to-Many (1:N)
+* **User ↔ Place:** A user can "own" multiple properties. We added `user_id` to the `Place` table.
+* **User ↔ Review:** A user can write multiple reviews. We added `user_id` to the `Review` table.
+* **Place ↔ Review:** A property can have multiple ratings. We added `place_id` to the `Review` table.
+
+#### 2. Many-to-Many (N:M)
+* **Place ↔ Amenity:** Since a place (like a house) can have many amenities (WiFi, Pool) and an amenity can belong to many houses, we implemented a **Join Table** called `place_amenity`. This table stores only the `place_id` and `amenity_id` pairs.
+
+
+
+### 🔧 Technical Details
+* **`backref`:** Used to create bidirectional access. For example, `place.owner` returns the User object, while `user.places` returns a list of Place objects.
+* **`lazy='select'` vs `'subquery'`:** Optimized how data is loaded. One-to-many relationships use standard loading, while many-to-many uses `subquery` to fetch all related amenities efficiently.
+* **Foreign Key Constraints:** Ensured that a review cannot exist without a valid user and place.
+
+### 🚀 Verification
+To apply these changes, the database must be recreated:
+1. Delete the existing `development.db` file (or run `db.drop_all()` in shell).
+2. Run `db.create_all()` in the Flask shell.
+3. Test using the API by creating a User, then a Place using that User's ID, and finally a Review for that Place.
