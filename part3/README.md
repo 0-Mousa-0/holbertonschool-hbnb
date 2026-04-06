@@ -1,76 +1,168 @@
-# HBnB - Part 3
+# HBnB - Part 3 (Auth, API, Persistence)
 
-This directory contains the Flask REST API for the HBnB project, including authentication, SQLAlchemy models, repository/facade layers, and SQL scripts for schema generation and seed data.
+This repository section implements a complete Flask backend for HBnB with:
 
-## What is implemented
+- application factory architecture
+- JWT authentication and role checks
+- SQLAlchemy persistence layer
+- repository + facade pattern
+- CRUD APIs for users, places, reviews, and amenities
+- ORM relationship mapping and validation
+- raw SQL schema/seed scripts and automated checks
 
-- Application factory with `Flask`, `Flask-RESTX`, `Flask-SQLAlchemy`, `Flask-JWT-Extended`, and `Flask-Bcrypt`
-- Persistent SQLAlchemy entities:
-  - `User`
-  - `Place`
-  - `Review`
-  - `Amenity`
-- Bidirectional relationships:
-  - One-to-many: `User -> Place`, `User -> Review`, `Place -> Review`
-  - Many-to-many: `Place <-> Amenity` through `place_amenity`
-- Relationship validation tests in `tests/test_relationships.py`
-- Raw SQL scripts for Task 9 in `sql/`
+## Project structure
 
-## Relationship mapping (Task 8)
+```text
+part3/
+├── app/
+│   ├── __init__.py                  # Flask app factory and namespace registration
+│   ├── extensions.py                # db, bcrypt, jwt extension instances
+│   ├── api/v1/
+│   │   ├── auth.py                  # login endpoint (JWT token issuing)
+│   │   ├── users.py                 # users CRUD and profile authorization rules
+│   │   ├── places.py                # places CRUD + ownership enforcement
+│   │   ├── reviews.py               # reviews CRUD + business rules
+│   │   └── amenities.py             # amenities CRUD (admin controlled writes)
+│   ├── models/
+│   │   ├── base_model.py            # shared id/timestamps + save/delete/update helpers
+│   │   ├── user.py
+│   │   ├── place.py
+│   │   ├── review.py
+│   │   └── amenity.py
+│   ├── persistence/repository.py    # abstract + SQLAlchemy repository base
+│   └── services/
+│       ├── facade.py                # use-case orchestration
+│       └── repositories/            # model-specific repositories
+├── sql/
+│   ├── create_tables.sql            # full relational schema
+│   ├── seed_data.sql                # admin + default amenities
+│   └── crud_checks.sql              # SQL-level CRUD verification
+├── tests/
+│   └── test_relationships.py        # ORM relationship tests
+├── config.py                        # environment configuration
+├── run.py                           # app entrypoint
+├── seed_admin.py                    # helper admin seeding (app-level)
+├── requirements.txt
+└── test.sh                          # unified verification script
+```
 
-The ORM mapping now uses consistent `back_populates` definitions on both sides:
+## Architecture overview
 
-- `User.places` <-> `Place.owner`
-- `User.reviews` <-> `Review.user`
-- `Place.reviews` <-> `Review.place`
-- `Place.amenities` <-> `Amenity.places` through `place_amenity`
+### 1) Presentation layer
 
-This fixes inconsistent `backref/back_populates` usage and ensures relationship loading, persistence, and traversal work correctly.
+`app/api/v1/*` exposes REST endpoints through Flask-RESTX namespaces.
 
-## SQL scripts (Task 9)
+Key behavior:
 
-The following files are available:
+- open read endpoints where required
+- protected write endpoints using `@jwt_required()`
+- ownership checks for updates/deletes
+- admin-only operations for privileged resources
 
-- `sql/create_tables.sql`  
-  Creates `users`, `places`, `reviews`, `amenities`, and `place_amenity` with constraints, foreign keys, and checks.
+### 2) Business layer
 
-- `sql/seed_data.sql`  
-  Inserts:
-  - Admin user with fixed id: `00000000-0000-0000-0000-000000000001`
-  - Bcrypt-hashed password for `admin1234`
-  - Initial amenities: `WiFi`, `Swimming Pool`, `Air Conditioning` with generated UUID-like ids
+`app/services/facade.py` centralizes business rules and orchestrates:
 
-- `sql/crud_checks.sql`  
-  Runs sample `INSERT`, `SELECT`, `UPDATE`, and `DELETE` queries to verify integrity and relationship constraints.
+- validation before persistence
+- entity lookups and cross-entity checks
+- creation/update logic independent from route handlers
 
-## Quick start
+### 3) Persistence layer
 
-1. Install dependencies:
+`app/persistence/repository.py` defines repository interfaces and SQLAlchemy implementation.
+Model repositories in `app/services/repositories/` provide typed access.
+
+## Data model and relationships
+
+Entities:
+
+- `User`
+- `Place`
+- `Review`
+- `Amenity`
+
+Relationships:
+
+- one-to-many:
+  - `User.places` <-> `Place.owner`
+  - `User.reviews` <-> `Review.user`
+  - `Place.reviews` <-> `Review.place`
+- many-to-many:
+  - `Place.amenities` <-> `Amenity.places` through `place_amenity`
+
+Data integrity rules include:
+
+- unique user email
+- rating range constraint (1..5)
+- foreign keys between related entities
+- one review per user/place pair in raw SQL schema
+
+## Authentication and authorization
+
+- Login endpoint (`/api/v1/auth/login`) issues JWT access tokens.
+- Passwords are stored hashed (bcrypt), never plain text.
+- JWT identity is used to enforce ownership rules for places/reviews/users.
+- Admin claim (`is_admin`) is used for privileged actions (for example, amenity creation/update).
+
+## SQL scripts
+
+The `sql/` directory contains standalone database scripts for evaluator checks:
+
+- `create_tables.sql`: creates all required tables and relationships
+- `seed_data.sql`: inserts required admin and initial amenities
+- `crud_checks.sql`: tests SQL-level insert/select/update/delete flows
+
+### Seeded admin user
+
+- fixed id: `00000000-0000-0000-0000-000000000001`
+- email: `admin@hbnb.io`
+- password: bcrypt hash of `admin1234`
+- `is_admin = TRUE`
+
+## Setup
 
 ```bash
 pip install -r requirements.txt
-```
-
-2. Run the API:
-
-```bash
 python run.py
 ```
 
-## Testing
+## Tests
 
-Use the project test runner:
+Run all tests with one command:
 
 ```bash
 bash test.sh
 ```
 
-### `test.sh` brief
+### What `test.sh` validates
 
-`test.sh` is a single verification script that:
+`test.sh` is now a full project smoke + integrity runner and checks everything in sequence:
 
-1. Runs Python relationship tests (`tests/test_relationships.py`)
-2. Builds a fresh SQLite DB from raw SQL scripts
-3. Seeds admin + amenities
-4. Executes CRUD checks
-5. Verifies admin password is hashed (not plain text) and seeded amenities exist
+1. **ORM relationship unit tests**
+   - runs `python -m unittest discover -s tests -v`
+   - verifies `user.places`, `place.reviews`, and `place.amenities` / `amenity.places`
+2. **Raw SQL schema checks**
+   - executes `sql/create_tables.sql`, `sql/seed_data.sql`, `sql/crud_checks.sql`
+   - validates FK/PK constraints and CRUD behavior
+   - confirms admin password is bcrypt-hashed and required amenities are seeded
+3. **API and auth smoke tests**
+   - creates an in-memory app DB
+   - logs in as admin and gets JWT
+   - creates amenity, users, place, and review through real API endpoints
+   - verifies retrieval endpoints return linked amenities/reviews correctly
+
+If all phases pass, the script ends with:
+
+`All checks passed (unit + SQL + API)`
+
+## API summary
+
+Base namespace: `/api/v1`
+
+- `/auth/login`
+- `/users` and `/users/<user_id>`
+- `/places`, `/places/<place_id>`, `/places/<place_id>/reviews`
+- `/reviews` and `/reviews/<review_id>`
+- `/amenities` and `/amenities/<amenity_id>`
+
+This gives a complete backend slice for authenticated resource management with persistent relational storage.
