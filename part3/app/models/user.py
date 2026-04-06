@@ -8,14 +8,6 @@ class User(BaseModel):
     __tablename__ = 'users'
     # One-to-Many relationships
     places = db.relationship('Place', back_populates='owner', cascade='all, delete-orphan')
-    # Explicit join args keep mapper setup stable across SQLAlchemy versions/environments.
-    reviews = db.relationship(
-        'Review',
-        back_populates='user',
-        cascade='all, delete-orphan',
-        foreign_keys='Review.user_id',
-        primaryjoin='User.id == Review.user_id',
-    )
 
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
