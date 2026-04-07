@@ -16,13 +16,15 @@ class Review(BaseModel):
 
     user = db.relationship(
         'User',
+        back_populates='reviews',
         foreign_keys=[user_id],
-        backref=db.backref('reviews', cascade='all, delete-orphan', lazy=True),
+        primaryjoin='Review.user_id == User.id',
     )
     place = db.relationship(
         'Place',
+        back_populates='reviews',
         foreign_keys=[place_id],
-        backref=db.backref('reviews', cascade='all, delete-orphan', lazy=True),
+        primaryjoin='Review.place_id == Place.id',
     )
 
     __table_args__ = (CheckConstraint('rating >= 1 AND rating <= 5', name='ck_review_rating_range'),)

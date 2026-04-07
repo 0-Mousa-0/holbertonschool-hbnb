@@ -23,6 +23,13 @@ class Place(BaseModel):
     owner_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
     owner = db.relationship('User', back_populates='places')
+    reviews = db.relationship(
+        'Review',
+        back_populates='place',
+        cascade='all, delete-orphan',
+        foreign_keys='Review.place_id',
+        primaryjoin='Place.id == Review.place_id',
+    )
     amenities = db.relationship('Amenity', secondary=place_amenity, back_populates='places', lazy='subquery')
 
     @validates('title')
