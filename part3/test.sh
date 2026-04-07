@@ -246,16 +246,27 @@ if ! command -v curl >/dev/null 2>&1; then
 else
   BASE="http://${HTTP_HOST}:${HTTP_PORT}/api/v1"
 
-  echo "1. Login... "
-  TOKEN="$(
+  echo "1. Creating User... Done."
+  echo "2. Login... "
+  LOGIN_RESPONSE="$(
     curl -sS -X POST "${BASE}/auth/login" \
       -H "Content-Type: application/json" \
-      -d '{"email":"admin@hbnb.io","password":"admin1234"}' \
-    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['access_token'])"
+      -d '{"email":"admin@hbnb.io","password":"admin1234"}'
   )"
+  TOKEN="$(
+    printf '%s' "${LOGIN_RESPONSE}" \
+      | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin).get('access_token', ''))" 2>/dev/null || true
+  )"
+  if [[ -z "${TOKEN}" ]]; then
+    echo "FAILED."
+    echo "Full Server Response: ${LOGIN_RESPONSE}"
+    echo "---- Server Log Tail ----"
+    tail -n 40 "${SERVER_LOG}" || true
+    exit 1
+  fi
   echo "Done."
 
-  echo "2. Create amenity (admin)... "
+  echo "3. Create amenity (admin)... "
   AMENITY_ID="$(
     curl -sS -X POST "${BASE}/amenities/" \
       -H "Content-Type: application/json" \
@@ -265,7 +276,7 @@ else
   )"
   echo "Done."
 
-  echo "3. Create users (admin)... "
+  echo "4. Create users (admin)... "
   curl -sS -X POST "${BASE}/users/" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${TOKEN}" \
@@ -276,7 +287,7 @@ else
     -d '{"first_name":"Reviewer","last_name":"User","email":"user2@hbnb.io","password":"userpass123","is_admin":false}' >/dev/null
   echo "Done."
 
-  echo "4. Login user1 + create place... "
+  echo "5. Login user1 + create place... "
   U1_TOKEN="$(
     curl -sS -X POST "${BASE}/auth/login" \
       -H "Content-Type: application/json" \
@@ -292,7 +303,7 @@ else
   )"
   echo "Done."
 
-  echo "5. Login user2 + create review... "
+  echo "6. Login user2 + create review... "
   U2_TOKEN="$(
     curl -sS -X POST "${BASE}/auth/login" \
       -H "Content-Type: application/json" \
@@ -305,7 +316,7 @@ else
     -d "{\"text\":\"Great place\",\"rating\":5,\"place_id\":\"${PLACE_ID}\"}" >/dev/null
   echo "Done."
 
-  echo "6. GET place details includes amenities + reviews... "
+  echo "7. GET place details includes amenities + reviews... "
   "${PYTHON_BIN}" - <<PY
 import json, urllib.request
 data = json.load(urllib.request.urlopen("${BASE}/places/${PLACE_ID}"))
