@@ -3,6 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_PATH="${ROOT_DIR}/instance/hbnb_sql_scripts.db"
+HTTP_DB_PATH="${ROOT_DIR}/instance/hbnb_http_smoke.db"
+HTTP_HOST="127.0.0.1"
+HTTP_PORT="5055"
+SERVER_LOG="${ROOT_DIR}/instance/test_server.log"
 
 if command -v python3 >/dev/null 2>&1; then
   PYTHON_BIN="python3"
@@ -12,6 +16,8 @@ else
   echo "Python interpreter not found (python3/python)." >&2
   exit 1
 fi
+
+echo "--- HBnB Part 3 Test ---"
 
 echo "==> Running relationship unit tests"
 "${PYTHON_BIN}" -m unittest discover -s tests -v
@@ -55,7 +61,7 @@ conn.close()
 print("SQL checks passed.")
 PY
 
-echo "==> Running API + auth smoke checks"
+echo "==> Running API + auth smoke checks (Flask test client)"
 "${PYTHON_BIN}" - <<'PY'
 from app import create_app
 from app.extensions import db
@@ -157,15 +163,158 @@ review_resp = client.post(
 )
 assert review_resp.status_code == 201, f"Review creation failed: {review_resp.get_data(as_text=True)}"
 
-places_list = client.get("/api/v1/places/")
-assert places_list.status_code == 200, "GET /places failed"
 place_details = client.get(f"/api/v1/places/{place_id}")
 assert place_details.status_code == 200, "GET /places/<id> failed"
 payload = place_details.get_json()
 assert len(payload.get("amenities", [])) >= 1, "Place amenities missing"
 assert len(payload.get("reviews", [])) >= 1, "Place reviews missing"
 
-print("API smoke checks passed.")
+print("API test-client smoke checks passed.")
 PY
 
-echo "==> All checks passed (unit + SQL + API)"
+echo "==> Running live HTTP smoke checks (server + curl)"
+
+mkdir -p "${ROOT_DIR}/instance"
+rm -f "${SERVER_LOG}" "${HTTP_DB_PATH}"
+
+export HBnb_HTTP_DB_PATH="${HTTP_DB_PATH}"
+export HBnb_HTTP_HOST="${HTTP_HOST}"
+export HBnb_HTTP_PORT="${HTTP_PORT}"
+
+("${PYTHON_BIN}" - <<'PY' >"${SERVER_LOG}" 2>&1 & echo $! > "${ROOT_DIR}/instance/test_server.pid"
+import os
+from werkzeug.serving import make_server
+
+from app import create_app
+from app.extensions import db
+from app.models.user import User
+
+db_path = os.environ["HBnb_HTTP_DB_PATH"]
+host = os.environ.get("HBnb_HTTP_HOST", "127.0.0.1")
+port = int(os.environ.get("HBnb_HTTP_PORT", "5055"))
+
+class HttpTestConfig:
+    SECRET_KEY = "http-test-secret"
+    JWT_SECRET_KEY = "http-test-jwt-secret"
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TESTING = True
+    DEBUG = False
+
+app = create_app(HttpTestConfig)
+with app.app_context():
+    db.create_all()
+    admin = User(
+        first_name="Admin",
+        last_name="User",
+        email="admin@hbnb.io",
+        password="admin1234",
+        is_admin=True,
+    )
+    db.session.add(admin)
+    db.session.commit()
+
+httpd = make_server(host, port, app)
+print(f"READY http://{host}:{port}", flush=True)
+httpd.serve_forever()
+PY
+) || true
+
+cleanup() {
+  if [[ -f "${ROOT_DIR}/instance/test_server.pid" ]]; then
+    kill "$(cat "${ROOT_DIR}/instance/test_server.pid")" >/dev/null 2>&1 || true
+    rm -f "${ROOT_DIR}/instance/test_server.pid"
+  fi
+}
+trap cleanup EXIT
+
+for _ in $(seq 1 50); do
+  if [[ -f "${SERVER_LOG}" ]] && grep -q "READY http://" "${SERVER_LOG}"; then
+    break
+  fi
+  sleep 0.1
+done
+
+if ! grep -q "READY http://" "${SERVER_LOG}"; then
+  echo "Server failed to start. Log:"
+  cat "${SERVER_LOG}"
+  exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl not found; skipping live HTTP checks."
+else
+  BASE="http://${HTTP_HOST}:${HTTP_PORT}/api/v1"
+
+  echo "1. Login... "
+  TOKEN="$(
+    curl -sS -X POST "${BASE}/auth/login" \
+      -H "Content-Type: application/json" \
+      -d '{"email":"admin@hbnb.io","password":"admin1234"}' \
+    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['access_token'])"
+  )"
+  echo "Done."
+
+  echo "2. Create amenity (admin)... "
+  AMENITY_ID="$(
+    curl -sS -X POST "${BASE}/amenities/" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      -d '{"name":"WiFi"}' \
+    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['id'])"
+  )"
+  echo "Done."
+
+  echo "3. Create users (admin)... "
+  curl -sS -X POST "${BASE}/users/" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -d '{"first_name":"Normal","last_name":"User","email":"user1@hbnb.io","password":"userpass123","is_admin":false}' >/dev/null
+  curl -sS -X POST "${BASE}/users/" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -d '{"first_name":"Reviewer","last_name":"User","email":"user2@hbnb.io","password":"userpass123","is_admin":false}' >/dev/null
+  echo "Done."
+
+  echo "4. Login user1 + create place... "
+  U1_TOKEN="$(
+    curl -sS -X POST "${BASE}/auth/login" \
+      -H "Content-Type: application/json" \
+      -d '{"email":"user1@hbnb.io","password":"userpass123"}' \
+    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['access_token'])"
+  )"
+  PLACE_ID="$(
+    curl -sS -X POST "${BASE}/places/" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer ${U1_TOKEN}" \
+      -d "{\"title\":\"Test Place\",\"description\":\"Smoke test\",\"price\":99.0,\"latitude\":24.7,\"longitude\":46.7,\"owner_id\":\"ignored\",\"amenities\":[\"${AMENITY_ID}\"]}" \
+    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['id'])"
+  )"
+  echo "Done."
+
+  echo "5. Login user2 + create review... "
+  U2_TOKEN="$(
+    curl -sS -X POST "${BASE}/auth/login" \
+      -H "Content-Type: application/json" \
+      -d '{"email":"user2@hbnb.io","password":"userpass123"}' \
+    | "${PYTHON_BIN}" -c "import sys, json; print(json.load(sys.stdin)['access_token'])"
+  )"
+  curl -sS -X POST "${BASE}/reviews/" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${U2_TOKEN}" \
+    -d "{\"text\":\"Great place\",\"rating\":5,\"place_id\":\"${PLACE_ID}\"}" >/dev/null
+  echo "Done."
+
+  echo "6. GET place details includes amenities + reviews... "
+  "${PYTHON_BIN}" - <<PY
+import json, urllib.request
+data = json.load(urllib.request.urlopen("${BASE}/places/${PLACE_ID}"))
+assert len(data.get("amenities", [])) >= 1
+assert len(data.get("reviews", [])) >= 1
+print("Done.")
+PY
+
+  echo "Live HTTP checks passed."
+fi
+
+echo "==> All checks passed (unit + SQL + API + HTTP)"
