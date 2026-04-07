@@ -1,14 +1,16 @@
-# HBnB - Part 3 (Auth, API, Persistence)
+## HBnB - Part 3 (Enhanced Backend: Auth + Persistence)
 
-This repository section implements a complete Flask backend for HBnB with:
+This `part3/` directory is the **backend slice** of the HBnB project. It extends earlier parts by adding:
 
-- application factory architecture
-- JWT authentication and role checks
-- SQLAlchemy persistence layer
-- repository + facade pattern
-- CRUD APIs for users, places, reviews, and amenities
-- ORM relationship mapping and validation
-- raw SQL schema/seed scripts and automated checks
+- **configuration via application factory**
+- **password hashing (bcrypt)**
+- **JWT authentication and authorization**
+- **persistent storage** via SQLAlchemy + SQLite (development)
+- **database relationships** (1:N and N:M)
+- **raw SQL scripts** (schema + seed + CRUD checks)
+- **tests** that validate ORM + SQL + HTTP behavior
+
+This README is written task-by-task (Tasks 0 → 10) to match the Holberton Part 3 requirements. The official instructions reference repository is `https://github.com/Holberton-Uy/hbnb-doc/tree/main/part3`.
 
 ## Project structure
 
@@ -166,3 +168,133 @@ Base namespace: `/api/v1`
 - `/amenities` and `/amenities/<amenity_id>`
 
 This gives a complete backend slice for authenticated resource management with persistent relational storage.
+
+## Task-by-task implementation guide (0 → 10)
+
+### Task 0 — Application factory + configuration
+
+- **Goal**: keep app creation configurable and scalable.
+- **Where**: `app/__init__.py`, `config.py`
+- **What to look for**:
+  - `create_app(config_class=...)`
+  - `app.config.from_object(config_class)`
+
+### Task 1 — Password hashing (bcrypt)
+
+- **Goal**: never store plaintext passwords.
+- **Where**: `app/models/user.py`, `app/services/facade.py`, `app/api/v1/users.py`
+- **Key idea**:
+  - hash during creation
+  - do not serialize password in GET responses
+
+### Task 2 — JWT authentication (`flask-jwt-extended`)
+
+- **Goal**: stateless login with access tokens.
+- **Where**: `app/api/v1/auth.py`, `app/extensions.py`, `app/__init__.py`
+- **What happens**:
+  - client POSTs email/password
+  - server verifies hashed password
+  - server returns `access_token`
+
+### Task 3 — Authenticated user access + ownership checks
+
+- **Goal**: only the owner can modify their resources (unless admin).
+- **Where**: `app/api/v1/places.py`, `app/api/v1/reviews.py`, `app/api/v1/users.py`
+- **Examples**:
+  - user can only update/delete their own place
+  - user can’t review their own place
+  - user can’t review the same place twice
+
+### Task 4 — Administrator access endpoints
+
+- **Goal**: admins can manage global resources and bypass ownership restrictions.
+- **Where**: `app/api/v1/users.py`, `app/api/v1/amenities.py`
+- **Mechanism**: JWT claim `is_admin` is embedded at login and checked on protected endpoints.
+
+### Task 5 — SQLAlchemy repository pattern
+
+- **Goal**: persistence logic should not live inside API routes.
+- **Where**: `app/persistence/repository.py`, `app/services/repositories/*.py`
+- **What this gives you**:
+  - consistent CRUD API for models
+  - ability to swap persistence strategies without rewriting business logic
+
+### Task 6 — Map `User` entity to SQLAlchemy
+
+- **Goal**: store users in DB with constraints (unique email) and timestamps.
+- **Where**: `app/models/base_model.py`, `app/models/user.py`
+
+### Task 7 — Map `Place`, `Review`, `Amenity` entities
+
+- **Goal**: store core entities in DB with correct types/constraints.
+- **Where**: `app/models/place.py`, `app/models/review.py`, `app/models/amenity.py`
+
+### Task 8 — Map relationships between entities
+
+- **Goal**: enable `user.places`, `place.reviews`, `place.amenities`, `amenity.places`.
+- **Where**:
+  - 1:N via `owner_id`, `user_id`, `place_id` foreign keys
+  - N:M via association table `place_amenity` in `app/models/place.py`
+
+### Task 9 — SQL scripts (schema + seed)
+
+- **Goal**: prove you can design the schema without ORM.
+- **Where**: `sql/create_tables.sql`, `sql/seed_data.sql`, `sql/crud_checks.sql`
+- **Seed requirements**:
+  - admin user fixed UUID id
+  - bcrypt-hashed password
+  - initial amenities inserted
+
+### Task 10 — ER diagram (Mermaid.js)
+
+The diagram below matches the schema and relationships.
+
+```mermaid
+erDiagram
+    users ||--o{ places : owns
+    users ||--o{ reviews : writes
+    places ||--o{ reviews : has
+    places ||--o{ place_amenity : includes
+    amenities ||--o{ place_amenity : belongs_to
+
+    users {
+      string id PK
+      string first_name
+      string last_name
+      string email
+      string password
+      boolean is_admin
+      datetime created_at
+      datetime updated_at
+    }
+    places {
+      string id PK
+      string title
+      string description
+      float price
+      float latitude
+      float longitude
+      string owner_id FK
+      datetime created_at
+      datetime updated_at
+    }
+    reviews {
+      string id PK
+      string text
+      int rating
+      string user_id FK
+      string place_id FK
+      datetime created_at
+      datetime updated_at
+    }
+    amenities {
+      string id PK
+      string name
+      datetime created_at
+      datetime updated_at
+    }
+    place_amenity {
+      string place_id FK
+      string amenity_id FK
+    }
+```
