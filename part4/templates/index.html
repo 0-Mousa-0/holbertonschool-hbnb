@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HBnB - Places</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.png') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    {% include 'header.html' %}
+
+    <main>
+      <section class="page-intro">
+        <h1>Available Places</h1>
+        <p>Find your next stay from our featured places.</p>
+      </section>
+
+      <section class="filters">
+        <label for="price-filter">Max price</label>
+        <select id="price-filter" name="price-filter">
+          <option value="10">10</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all" selected>All</option>
+        </select>
+      </section>
+
+      <section id="places-list" class="places-grid">
+        <!-- Places are injected by scripts.js -->
+      </section>
+    </main>
+
+    {% include 'footer.html' %}
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  </body>
+</html>

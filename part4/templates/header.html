@@ -1,0 +1,21 @@
+<header class="site-header">
+  <a href="index.html" aria-label="HBnB home">
+    <img
+      src="{{ url_for('static', filename='images/logo.png') }}"
+      alt="HBnB logo"
+      class="logo"
+    />
+  </a>
+
+  <nav class="nav-bar" aria-label="Main navigation">
+    <a href="index.html">Home</a>
+  </nav>
+
+  <div class="header-actions">
+    <a id="admin-users-link" href="admin_users.html" class="login-button">Users</a>
+    <a id="add-place-link" href="add_place.html" class="login-button">Add Place</a>
+    <a id="register-link" href="register.html" class="login-button">Register</a>
+    <a id="login-link" href="login.html" class="login-button">Login</a>
+    <button id="logout-button" class="login-button" type="button">Logout</button>
+  </div>
+</header>

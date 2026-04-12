@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HBnB - Place Details</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.png') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    {% include 'header.html' %}
+
+    <main class="main-place-detail">
+      <button type="button" id="place-back-button" class="place-back-button" aria-label="Back to home and listings" title="Back to home">
+        <span class="place-back-arrow" aria-hidden="true">←</span>
+      </button>
+      <section id="place-details" class="place-details">
+        <!-- Place details are injected by scripts.js -->
+      </section>
+      <section id="admin-place-controls" class="add-review"></section>
+
+      <section id="place-reviews" aria-label="Reviews">
+        <h2>Reviews</h2>
+        <div id="reviews-list"></div>
+      </section>
+
+      <section id="add-review" class="add-review">
+        <a id="add-review-link" class="details-button" href="add_review.html">Add a Review</a>
+        <p id="add-review-login-hint" class="login-hint" hidden>
+          <a href="login.html">Log in</a> to add a star rating and comment.
+        </p>
+        <p id="add-review-owner-hint" class="login-hint owner-hint" hidden></p>
+        <p id="add-review-already-hint" class="login-hint" hidden></p>
+      </section>
+    </main>
+
+    {% include 'footer.html' %}
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  </body>
+</html>
