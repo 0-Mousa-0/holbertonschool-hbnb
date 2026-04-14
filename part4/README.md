@@ -117,17 +117,17 @@ Also available:
 
 ---
 ## front-end
-![front-end](homepage.png)
+### ![](homepage.png)
 ---
-### ![Users](users.png)
+### ![](users.png)
 ---
-### ![Adding-place](addingPlace.png)
+### ![](addingPlace.png)
 ---
-### ![Place-Info](placeInfo.png)
+### ![](placeInfo.png)
 ---
-### ![New-Review](addReview.png)
+### ![](addReview.png)
 ---
-### ![Reviews](reviw.png)
+### ![](reviw.png)
 ---
 
 ## Authors
