@@ -114,9 +114,9 @@ Also available:
 - Passwords are hashed using bcrypt
 - JWT is required for protected endpoints
 
-## Front-end
+
 ---
-### ![Home-Page](homepage.png)
+### ![front-end](homepage.png)
 ---
 ### ![Users](users.png)
 ---
