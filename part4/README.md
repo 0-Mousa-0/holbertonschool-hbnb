@@ -114,6 +114,21 @@ Also available:
 - Passwords are hashed using bcrypt
 - JWT is required for protected endpoints
 
+## Front-end
+---
+### ![Home-Page](homepage.png)
+---
+### ![Users](users.png)
+---
+### ![Adding-place](addingPlace.png)
+---
+### ![Place-Info](placeInfo.png)
+---
+### ![New-Review](addReview.png)
+---
+### ![Reviews](reviw.png)
+---
+
 ## Authors
 
 - Abdullah Manahi
