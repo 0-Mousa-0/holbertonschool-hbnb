@@ -116,7 +116,8 @@ Also available:
 
 
 ---
-### ![front-end](homepage.png)
+## front-end
+![front-end](homepage.png)
 ---
 ### ![Users](users.png)
 ---
