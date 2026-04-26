@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  hbnb-part4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hbnb_part4_app
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: development
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+      - ./instance:/app/instance
+    restart: unless-stopped
